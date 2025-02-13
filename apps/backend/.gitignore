@@ -1,0 +1,16 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+# Prisma generated files
+prisma/migrations/
+
+# Jest & Testing related
+coverage/
+jest-cache/
+jest.config.ts
+*.test.ts
+*.spec.ts
+
+# Webpack artifacts
+webpack.config.js

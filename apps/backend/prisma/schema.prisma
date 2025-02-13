@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MusicPlatform {
+  Spotify
+  YoutubeMusic
+}
+
+model User {
+  id          String    @id @default(uuid()) @db.Uuid
+  email       String?   @unique
+
+  accounts    Account[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("users")
+} 
+
+model GuestUser {
+  id          String    @id @default(uuid()) @db.Uuid
+  sessionId   String    @unique 
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("guest_users")
+}
+
+model Account {
+  id                  String          @id @default(uuid())
+  userId              String          @db.Uuid
+  sessionId           String          @unique 
+
+  provider            MusicPlatform
+  providerAccountId   String          @unique
+  
+  username            String
+  avatarUrl           String?
+
+  refreshToken        String?
+
+  user                User            @relation(fields: [userId], references: [id])
+  @@map("accounts")
+  @@unique([provider, providerAccountId])  
+}

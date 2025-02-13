@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "typeRoots": ["src/app/common/types", "./node_modules/@types"] // added for type recognition
+  },
+  "paths": {
+    "express-session": ["node_modules/@types/express-session"] // added for type recognition
+},
+}
