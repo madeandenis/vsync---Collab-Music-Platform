@@ -2,13 +2,13 @@ import { Request } from 'express';
 import { TokenData, UserProfile } from '@frontend/shared';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Account, MusicPlatform } from '@prisma/client';
-import { GuestUserSession, UserSession } from '../../common/types/session.type';
+import { GuestUserSession, UserSession } from '../../common/interfaces/user-session.interface';
 import { createLogger } from '../../common/utils/logger.util';
 
 @Injectable()
-export class SessionService {
+export class UsersSessionService {
 
-    private readonly logger = createLogger(SessionService.name);
+    private readonly logger = createLogger(UsersSessionService.name);
 
     createUserSession(
         req: Request,
@@ -20,6 +20,7 @@ export class SessionService {
         const account = {
             provider: userAccount.provider,
             providerAccountId: userAccount.providerAccountId,
+            providerAccountUrl: userProfile.external_urls[userAccount.provider.toLowerCase()],
             username: userProfile.display_name,
             avatarUrl: userProfile.images?.[0]?.url
         };
@@ -63,7 +64,7 @@ export class SessionService {
         }
     }
 
-    saveSession(req: Request): Promise<void> {
+    async saveSession(req: Request): Promise<void> {
         return new Promise((resolve, reject) => {
             req.session.save((error) => {
                 if (error) {
@@ -76,7 +77,7 @@ export class SessionService {
         });
     }
 
-    regenerateSession(req: Request): Promise<void> {
+    async regenerateSession(req: Request): Promise<void> {
         return new Promise((resolve, reject) => {
             req.session.regenerate((error) => {
                 if (error) {
@@ -89,7 +90,7 @@ export class SessionService {
         });
     }
 
-    destroySession(req: Request): Promise<void> {
+    async destroySession(req: Request): Promise<void> {
         return new Promise((resolve, reject) => {
             req.session.destroy((error) => {
                 if (error) {

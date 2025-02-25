@@ -41,15 +41,18 @@ async function initializeRedisClient()
   return redisClient;
 }
 
-function configureSessionMiddleware(redisClient) 
+function configureSessionMiddleware(redisClient, cookieSecret, secure) 
 {
   return session({
-    store: new RedisStore({ client: redisClient }),
-    secret: 'your-secret-key',
+    store: new RedisStore({
+      client: redisClient,
+      prefix: 'user:sess:' 
+    }),
+    secret: cookieSecret,
     resave: false,
     saveUninitialized: true,
     cookie: {
-      secure: false,
+      secure,
       httpOnly: true,
       maxAge: 1000 * 60 * 60, 
     },
@@ -64,6 +67,7 @@ async function bootstrap() {
   const host = configService.get<number>('HOST');
   const port = configService.get<number>('API_PORT');
   const nodeEnvironment = configService.get<string>('NODE_ENV');
+  const cookieSecret = configService.get<string>('COOKIE_SECRET');
   const secure = nodeEnvironment === 'production';
   const baseUrl = `${secure ? 'https' : 'http'}://${host}:${port}`;
 
@@ -72,7 +76,7 @@ async function bootstrap() {
 
   const redisClient = await initializeRedisClient();
 
-  app.use(configureSessionMiddleware(redisClient));
+  app.use(configureSessionMiddleware(redisClient, cookieSecret, secure));
 
   await app.listen(port);
   logger.info(`Application is running on: ${baseUrl}`);

@@ -3,7 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import qs from 'qs';
 import { createLogger } from '../../../common/utils/logger.util';
-import { TokenData, UserProfile } from '@frontend/shared';
+import { Playlist, TokenData, Track, UserProfile } from '@frontend/shared';
+import { MusicPlatform } from '@prisma/client';
 
 @Injectable()
 export class SpotifyService {
@@ -17,6 +18,8 @@ export class SpotifyService {
   private readonly spotifyAuthorizeUrl = 'https://accounts.spotify.com/authorize';
   private readonly spotifyTokenUrl = 'https://accounts.spotify.com/api/token';
   private readonly spotifyUserProfileUrl = 'https://api.spotify.com/v1/me';
+  private readonly spotifySearchUrl = 'https://api.spotify.com/v1/search';
+  private readonly spotifyPlaylistsUrl = 'https://api.spotify.com/v1/me/playlists';
 
   constructor(
     private readonly configService: ConfigService 
@@ -70,19 +73,8 @@ export class SpotifyService {
     }
     catch(error)
     {
-      this.logger.error(error, 'Error exchanging authorization code for access token');
-      if (axios.isAxiosError(error))
-      {
-        throw new HttpException(
-          error.response?.data || 'Spotify API error',
-          error.response?.status || HttpStatus.BAD_GATEWAY
-        )
-      }
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
-    } 
+      this.handleSpotifyError(error, 'exchanging authorization code for access token');
+    }
   }
 
   async refreshAccessToken(refreshToken: string): Promise<TokenData> {
@@ -111,23 +103,11 @@ export class SpotifyService {
     }
     catch (error) 
     {
-      this.logger.error(error, 'Error refreshing access token');
-      if (axios.isAxiosError(error))
-      {
-        throw new HttpException(
-          error.response?.data || 'Spotify API error',
-          error.response?.status || HttpStatus.BAD_GATEWAY
-        )
-      }
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
+      this.handleSpotifyError(error, 'refreshing access token');
     }
   }
 
   async fetchUserProfile(accessToken: string): Promise<UserProfile> {
-
     const headers = {
       'Authorization': `Bearer ${accessToken}`,
     };
@@ -140,19 +120,91 @@ export class SpotifyService {
     }
     catch (error) 
     {
-      this.logger.error(error, 'Error fetching user profile');
-      if (axios.isAxiosError(error))
-      {
-        throw new HttpException(
-          error.response?.data || 'Spotify API error',
-          error.response?.status || HttpStatus.BAD_GATEWAY
-        )
-      }
-      throw new HttpException(
-        'Internal Server Error',
-        HttpStatus.INTERNAL_SERVER_ERROR
-      )
+      this.handleSpotifyError(error, 'fetching user profile');
     }
+  }
+
+  
+  async fetchUserPlaylists(accessToken: string): Promise<Playlist> 
+  {
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+    };
+  
+    try 
+    {
+      const response = await axios.get(this.spotifyPlaylistsUrl, { headers });
+  
+      return response.data.items;
+    }
+    catch (error) 
+    {
+      this.handleSpotifyError(error, 'fetching user playlists');
+    }
+  }
+  
+
+  async searchTracks(accessToken: string, query: string): Promise<Track[]>
+  {
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+    };
+    const params = {
+      q: query,
+      type: 'track',
+    }
+
+    try 
+    {
+      const response = await axios.get(
+        this.spotifySearchUrl,
+        { headers, params }
+      );
+
+      return this.mapSpotifyTrackResponse(response.data);
+    }
+    catch (error) 
+    {
+      this.handleSpotifyError(error, 'searching tracks');
+    }
+  }
+
+  private handleSpotifyError(error: any, action: string) {
+    this.logger.error(error, `Error ${action}`);
+    if (axios.isAxiosError(error)) {
+      throw new HttpException(
+        error.response?.data || 'Spotify API error',
+        error.response?.status || HttpStatus.BAD_GATEWAY
+      );
+    }
+    throw new HttpException(
+      'Internal Server Error',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+
+  private mapSpotifyTrackResponse(response: any): Track[] {
+    return response.tracks.items.map((track: any) => ({
+        id: track.id,
+        name: track.name,
+        album: track.album
+            ? {
+                  id: track.album.id,
+                  name: track.album.name,
+                  images: track.album.images || [],
+                  imageUrl: track.album.images?.[0]?.url || null
+              }
+            : undefined,
+        artists: track.artists.map((artist: any) => ({
+            id: artist.id,
+            name: artist.name
+        })),
+        href: track.href,
+        preview_url: track.preview_url,
+        video_url: null, 
+        duration_ms: track.duration_ms,
+        platform: MusicPlatform.Spotify 
+    }));
   }
 }
   

@@ -23,6 +23,7 @@ model User {
   email       String?   @unique
 
   accounts    Account[]
+  groups      Group[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -56,4 +57,43 @@ model Account {
   user                User            @relation(fields: [userId], references: [id])
   @@map("accounts")
   @@unique([provider, providerAccountId])  
+}
+
+model Group {
+  id                  String          @id @default(uuid()) @db.Uuid
+  code                String          @unique
+
+  name                String
+  description         String?            
+  imageUrl            String?  
+
+  isPublic            Boolean         @default(true)
+  isActive            Boolean         @default(true)
+  
+  platform            MusicPlatform   
+  sessionBackup       Json?           
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  creator             User            @relation(fields: [creatorId], references: [id])
+  creatorId           String          @db.Uuid
+
+  invites             GroupInvite[] 
+
+  @@map("groups")
+  @@index([creatorId])
+}
+
+model GroupInvite {
+  id                  String          @id @default(cuid())
+  code                String          @unique
+  expiresAt           DateTime        
+ 
+  group               Group           @relation(fields: [groupId], references: [id])
+  groupId             String          @db.Uuid
+ 
+  createdAt           DateTime        @default(now())
+
+  @@map("group_invites")
 }

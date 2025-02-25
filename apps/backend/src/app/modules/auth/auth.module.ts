@@ -3,13 +3,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { AccountsModule } from '../accounts/accounts.module';
-import { SessionModule } from '../session/session.module';
+import { UsersSessionModule } from '../users-session/users-session.module';
 
 @Module({
   imports: [
     UsersModule,
     AccountsModule,
-    SessionModule
+    UsersSessionModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

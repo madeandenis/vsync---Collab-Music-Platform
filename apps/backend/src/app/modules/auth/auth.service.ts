@@ -5,14 +5,14 @@ import { AccountsService } from '../accounts/accounts.service';
 import { MusicPlatform } from '@prisma/client';
 import { AccountDTO } from '../accounts/dto/accunt.dto';
 import { Request } from 'express';
-import { SessionService } from '../session/session.service';
+import { UsersSessionService } from '../users-session/users-session.service';
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
         private readonly accountsService: AccountsService,
-        private readonly sessionService: SessionService
+        private readonly sessionService: UsersSessionService
     ){}
 
     async authenticate(req: Request, provider: MusicPlatform, tokenData: TokenData, userProfile: UserProfile)
@@ -33,7 +33,7 @@ export class AuthService {
             userProfile,
             tokenData
         );
-        this.sessionService.saveSession(req);
+        await this.sessionService.saveSession(req);
     }
     
     async authenticateGuest(req: Request)
@@ -45,6 +45,6 @@ export class AuthService {
             req,
             guestUser.id
         );
-        this.sessionService.saveSession(req);
+        await this.sessionService.saveSession(req);
     }
 }

@@ -33,15 +33,17 @@ export interface Track {
     id: string;
     name: string;
     album?: {
+        id: string;
         name: string;
-        imageUrl: string;
+        images?: { url: string }[]; 
+        imageUrl?: string;
     };
     artists?: Array<{
         id?: string;
         name: string;
     }>;
     href?: string; 
-    preview_url?: string | null; 
+    preview_url?: string; 
     video_url?: string; 
     duration_ms?: number;
     platform?: MusicPlatform;
@@ -49,14 +51,18 @@ export interface Track {
 
 export interface TracksSearchResult {
     tracks: {
+        href?: string,
         items: Track[];
+        limit?: number;
+        offset: number;
+        total?: number;
     };
 }
 
 export interface Playlist {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     images?: Array<{ url: string }>;
     tracks?: {
         total: number;
@@ -66,6 +72,6 @@ export interface Playlist {
         display_name: string;
     };
     public?: boolean;
-    platform?: MusicPlatform
+    platform?: MusicPlatform;
     external_url?: string; 
 }

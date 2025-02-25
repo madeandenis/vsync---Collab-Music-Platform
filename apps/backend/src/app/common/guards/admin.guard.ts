@@ -1,18 +1,21 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Request } from 'express';
-import { isGuestUserSession } from '../interfaces/user-session.interface';
+import { UserSession } from '../interfaces/user-session.interface';
 
 @Injectable()
-export class RegisteredUserGuard implements CanActivate {
+export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const user = request.session.user;
+    const user = request.session.user as UserSession;
+
     if (!user) {
       throw new ForbiddenException('Authentication required');
     }
-    if (isGuestUserSession(user)) {
-      throw new ForbiddenException('Guest users cannot access this endpoint');
+
+    if (!user.isAdmin) {
+      throw new ForbiddenException('Access restricted to administrators only');
     }
+
     return true;
   }
 }

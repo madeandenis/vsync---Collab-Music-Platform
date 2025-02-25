@@ -1,12 +1,12 @@
 import { Controller, Get, HttpStatus, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { handleError, respond } from '../../common/utils/response.util';
-import { SessionService } from '../session/session.service';
 import { createLogger } from '../../common/utils/logger.util';
 import { UsersService } from '../users/users.service';
 import { MusicPlatform } from '@prisma/client';
-import { isGuestUserSession } from '../../common/types/session.type';
 import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
+import { isGuestUserSession } from '../../common/interfaces/user-session.interface';
+import { UsersSessionService } from '../users-session/users-session.service';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +15,7 @@ export class AuthController {
   
   constructor(
     private readonly userService: UsersService,
-    private readonly sessionService: SessionService
+    private readonly usersSessionService: UsersSessionService
   ) { }
   
   @Post('logout')
@@ -37,7 +37,7 @@ export class AuthController {
         await this.userService.deleteGuestUser(sessionId);
       }
 
-      this.sessionService.destroySession(req);
+      this.usersSessionService.destroySession(req);
       res.clearCookie('connect.sid') // session cookie
 
       return respond(res).success(HttpStatus.OK);
@@ -49,8 +49,7 @@ export class AuthController {
     }
   }
 
-  @Get('login/:provider')
-  @UseGuards(RegisteredUserGuard)
+  @Get('login/:provider') // TODO - init a session guest and upgrade it to an user
   async login(@Req() req: Request, @Res() res: Response, @Param('provider') provider: string) {
     const validProvider = await this.getValidProvider(provider);
     if (!validProvider) {

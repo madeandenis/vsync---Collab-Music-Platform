@@ -1,6 +1,8 @@
 import { ApiResponse } from "@frontend/shared";
 import { HttpException, HttpStatus } from "@nestjs/common";
+import { Socket } from 'socket.io';
 import { Response } from 'express'; 
+import { WsException } from "@nestjs/websockets";
 
 export function respond<T>(res: Response)
 {
@@ -43,4 +45,20 @@ export function handleError(res: Response, error: unknown)
         HttpStatus.INTERNAL_SERVER_ERROR,
         'An unknown error occurred.'
     )
+}
+
+export function handleWsError(client: Socket, error: unknown)
+{
+    if (error instanceof WsException)
+    {
+        client.emit('error', error.message || 'A WebSocket exception occurred');
+    }
+    else if (error instanceof Error)
+    {
+        client.emit('error', error.message || 'A unknown server error occurred');
+    }
+    else (error instanceof Error)
+    {
+        client.emit('error', String(error) || 'A unknown error occurred');
+    }
 }

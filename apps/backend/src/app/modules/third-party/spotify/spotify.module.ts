@@ -3,13 +3,13 @@ import { SpotifyService } from './spotify.service';
 import { SpotifyController } from './spotify.controller';
 import { AuthModule } from '../../auth/auth.module';
 import { AccountsModule } from '../../accounts/accounts.module';
-import { SessionModule } from '../../session/session.module';
+import { UsersSessionModule } from '../../users-session/users-session.module';
 
 @Module({
   imports: [
     AuthModule,
     AccountsModule,
-    SessionModule
+    UsersSessionModule,
   ],
   controllers: [SpotifyController],
   providers: [SpotifyService],

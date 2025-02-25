@@ -3,23 +3,45 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import * as Joi from 'joi';
-import { PrismaModule } from '../prisma/prisma.module';
 import { SpotifyModule } from '../third-party/spotify/spotify.module';
 import { AuthModule } from '../auth/auth.module';
 import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
+import { WebsocketsModule } from '../gateways/websockets.module';
+import { GroupsModule } from '../groups/groups.module';
+import { GroupsSesionModule } from '../groups-session/groups-session.module';
+import { UsersModule } from '../users/users.module';
+import { UsersProfileModule } from '../users-profile/users-profile.module';
+import { UsersSessionModule } from '../users-session/users-session.module';
 
 @Module({
   imports: [
     SpotifyModule,
     AuthModule,
-    PrismaModule,
+    WebsocketsModule,
+    GroupsModule,
+    GroupsSesionModule,
+    UsersModule,
+    UsersSessionModule,
+    UsersProfileModule,
     ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
+      isGlobal: true, 
       validationSchema: Joi.object({
+        // Spotify API Credentials
         SPOTIFY_CLIENT_ID: Joi.string().required(),
         SPOTIFY_CLIENT_SECRET: Joi.string().required(),
         SPOTIFY_REDIRECT_URI: Joi.string().required(),
+
+        // Redis Configuration
+        REDIS_HOST: Joi.string().default('localhost'),
+        REDIS_PORT: Joi.number().default(6379),
+
+        // Session Configuration
+        COOKIE_SECRET: Joi.string().required(),
+
+        // Environment & Server Config
+        NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        HOST: Joi.string().default('localhost'),
+        API_PORT: Joi.number(),
       }),
     }),
     RedisModule.forRootAsync({
@@ -35,7 +57,8 @@ import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
           url: redisUrl
         };
       }
-    })
+    }),
+    // TODO - Implement ThrottlerModule & ThrottlerExceptionFilter
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -3,6 +3,7 @@ import { MusicPlatform } from "@prisma/client";
 interface Account {
     provider: MusicPlatform;
     providerAccountId: string;
+    providerAccountUrl: string;
     username: string;
     avatarUrl?: string;
 }
@@ -28,6 +29,7 @@ export interface UserSession {
     token?: AuthToken;
     metadata: SessionMetadata;
     activeAccount: Account;
+    isAdmin?: boolean;
 }
 
 export interface GuestUserSession {
