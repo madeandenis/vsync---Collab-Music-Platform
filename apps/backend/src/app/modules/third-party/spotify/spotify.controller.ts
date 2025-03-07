@@ -7,7 +7,7 @@ import { createLogger } from '../../../common/utils/logger.util';
 import { TokenData, UserProfile } from '@frontend/shared';
 import { AuthService } from '../../auth/auth.service';
 import { MusicPlatform } from '@prisma/client';
-import { isValidUrl } from '../../../common/utils/url.util';
+import { isValidUrl, splitUrl } from '../../../common/utils/url.util';
 import { AccountsService } from '../../accounts/accounts.service';
 import { allowedDomains } from '../../../config/allowed-domains';
 import { RegisteredUserGuard } from '../../../common/guards/registered-user.guard';
@@ -15,18 +15,27 @@ import { SpotifyUserGuard } from '../../../common/guards/spotify-user.guard';
 import { UsersSessionService } from '../../users-session/users-session.service';
 import { isGuestUserSession, UserSession } from '../../../common/interfaces/user-session.interface';
 import { TokenExpirationGuard } from '../../../common/guards/token-expiration.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('spotify')
 export class SpotifyController {
 
   private readonly logger = createLogger(SpotifyController.name);
+  private clientBaseUrl;  
 
   constructor(
     private readonly spotifyService: SpotifyService,
     private readonly accountService: AccountsService,
     private readonly authService: AuthService,
     private readonly usersSessionService: UsersSessionService,
-  ) {}
+    private readonly configService: ConfigService
+  ) {
+    const nodeEnvironment = configService.get<string>('NODE_ENV');
+    const secure = nodeEnvironment === 'production';
+    const host = this.configService.get<string>('HOST');
+    const client_port = this.configService.get<string>('CLIENT_PORT');
+    this.clientBaseUrl = `${secure ? 'https' : 'http'}://${host}:${client_port}`;
+  }
 
   @Get('login')
   async login(@Res() res: Response, @Req() req: Request, @Query('state') state?: string){
@@ -54,6 +63,7 @@ export class SpotifyController {
     }
   }
 
+  // TODO - handle and redirect on auth error to client side
   @Get('callback')
   async callback(@Res() res: Response, @Req() req: Request)
   {
@@ -76,11 +86,11 @@ export class SpotifyController {
       if(authError)
       {
         this.usersSessionService.destroySession(req);
-        return respond(res).failure(HttpStatus.BAD_REQUEST, authError);
+        return this.handleFailedAuthentication(res, 'Invalid query parameters');
       }
       if(!requestState || requestState !== sessionState){
         this.usersSessionService.destroySession(req);
-        return respond(res).failure(HttpStatus.FORBIDDEN, 'State validation failed');
+        return this.handleFailedAuthentication(res, 'State validation failed');
       }
 
       const tokenData: TokenData = await this.spotifyService.exchangeCodeForToken(authCode as string);
@@ -210,16 +220,36 @@ export class SpotifyController {
 
   private redirectTo(res: Response, state: string)
   {
-    const url = isValidUrl(state) && allowedDomains.some(domain => state.startsWith(domain))
-      ? state
-      : '/home';
-    return res.redirect(url);
+    if(isValidUrl(state))
+    {
+      state = splitUrl(state).path;
+    }
+
+    if (allowedDomains.includes(state)) {
+      if(state.startsWith('/api'))
+      {
+        return res.redirect(state);
+      }
+      else
+      {
+        return res.redirect(`${this.clientBaseUrl}${state}`);
+      }
+    }
+
+    return res.redirect(`${this.clientBaseUrl}/home`);
   }
 
   private handleFailedAuthentication(res: Response, error: unknown)
   {
-    this.logger.error(error, 'Authentication failed');
-    return respond(res).failure(HttpStatus.INTERNAL_SERVER_ERROR, 'Authentication failed');
-  }
+    let errorMessage = 'Authentication failed'
 
+    if(typeof error === 'string')
+    {
+      errorMessage = error;
+    }
+
+    this.logger.error(error, errorMessage);
+    return res.redirect(`${this.clientBaseUrl}/login?err=${encodeURI('Authentication failed')}`);
+  }
+ 
 }

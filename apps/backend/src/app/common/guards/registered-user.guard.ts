@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { isGuestUserSession } from '../interfaces/user-session.interface';
 
@@ -7,12 +7,15 @@ export class RegisteredUserGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.session.user;
+    
     if (!user) {
-      throw new ForbiddenException('Authentication required');
+      throw new UnauthorizedException('Not authenticated');
     }
+    
     if (isGuestUserSession(user)) {
-      throw new ForbiddenException('Guest users cannot access this endpoint');
+      throw new ForbiddenException('Please log in with a full account.');
     }
+    
     return true;
   }
 }

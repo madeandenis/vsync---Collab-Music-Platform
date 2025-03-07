@@ -1,5 +1,5 @@
 import 'express-session';
-import { GuestUserSession, UserSession } from './session.type';
+import { UserSession, GuestUserSession } from '../interfaces/user-session.interface';
 
 declare module 'express-session' {
   interface SessionData {

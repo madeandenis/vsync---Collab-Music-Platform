@@ -116,7 +116,7 @@ export class SpotifyService {
     {
       const response = await axios.get(this.spotifyUserProfileUrl, { headers });
 
-      return response.data as UserProfile;
+      return {...response.data, platform: MusicPlatform.Spotify} as UserProfile;
     }
     catch (error) 
     {

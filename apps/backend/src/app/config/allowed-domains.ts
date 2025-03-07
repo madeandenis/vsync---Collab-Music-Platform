@@ -1,1 +1,4 @@
-export const allowedDomains: string[] = ['/home'];
+export const allowedDomains: string[] = [
+    '/home',
+    '/user/profile',
+];
