@@ -21,11 +21,11 @@ export interface UserProfile {
         height?: number;
         width?: number;
     }>;
-    platform?: MusicPlatform;
+    platform: MusicPlatform;
     product?: string;
     external_urls?: {
         spotify?: string;
-        youtube?: string;
+        youtubemusic?: string;
     };
 }
 

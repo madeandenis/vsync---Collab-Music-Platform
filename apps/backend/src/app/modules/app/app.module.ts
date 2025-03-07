@@ -12,6 +12,8 @@ import { GroupsSesionModule } from '../groups-session/groups-session.module';
 import { UsersModule } from '../users/users.module';
 import { UsersProfileModule } from '../users-profile/users-profile.module';
 import { UsersSessionModule } from '../users-session/users-session.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggingInterceptor } from '../../common/interceptors/log.interceptor';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import { UsersSessionModule } from '../users-session/users-session.module';
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         HOST: Joi.string().default('localhost'),
         API_PORT: Joi.number(),
+        CLIENT_PORT: Joi.number(),
       }),
     }),
     RedisModule.forRootAsync({
@@ -61,6 +64,12 @@ import { UsersSessionModule } from '../users-session/users-session.module';
     // TODO - Implement ThrottlerModule & ThrottlerExceptionFilter
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}

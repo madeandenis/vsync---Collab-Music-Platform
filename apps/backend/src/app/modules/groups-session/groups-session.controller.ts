@@ -6,9 +6,10 @@ import { Throttle } from '@nestjs/throttler';
 import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
 import { GroupOwnershipGuard } from '../../common/guards/group-ownership.guard';
 import { GroupsSessionCache } from '../cache/services/groups-session-cache.service';
+import { UserSession } from '../../common/interfaces/user-session.interface';
 
 @Controller('groups-sesion')
-@UseGuards(RegisteredUserGuard, )
+@UseGuards(RegisteredUserGuard)
 export class GroupsSesionController {
   constructor(
     private readonly groupsSessionService: GroupsSesionService,
@@ -21,7 +22,7 @@ export class GroupsSesionController {
   public async createGroupSession(@Res() res: Response, @Req() req: Request, @Param('groupId', ParseUUIDPipe) groupId: string)
   {
     try {
-      const user = req.session.user;
+      const user = req.session.user as UserSession;
       const groupSession = await this.groupsSessionService.createGroupSession(groupId, user);
 
       return respond(res).success(HttpStatus.CREATED, groupSession);

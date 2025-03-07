@@ -1,4 +1,4 @@
-import { INestApplication, Logger } from '@nestjs/common';
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/modules/app/app.module';
 import { createLogger } from './app/common/utils/logger.util';
@@ -9,6 +9,7 @@ import expressListRoutes from 'express-list-routes';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
+import { ApiExceptionFilter } from './app/common/filters/exception.filter';
 
 const logger = createLogger("main.ts");
 
@@ -77,6 +78,12 @@ async function bootstrap() {
   const redisClient = await initializeRedisClient();
 
   app.use(configureSessionMiddleware(redisClient, cookieSecret, secure));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      forbidNonWhitelisted: true, 
+    }),
+  );
+  app.useGlobalFilters(new ApiExceptionFilter()); 
 
   await app.listen(port);
   logger.info(`Application is running on: ${baseUrl}`);

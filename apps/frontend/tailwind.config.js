@@ -11,7 +11,23 @@ module.exports = {
     ...createGlobPatternsForDependencies(__dirname),
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        graphite: '#282828',
+        spotifyGreen: '#1DB954',
+        ytMusicRed: '#ff0033',
+        ytMusicBlack: '#020202',
+      },
+      fontFamily: {
+        roboto: ['Roboto', 'sans-serif'],
+        montserrat: ['Montserrat', 'sans-serif'],
+        poppins: ['Poppins', 'sans-serif'],
+        nunito: ['Nunito', 'sans-serif'], 
+      },
+      boxShadow: {
+        'hover-black': '0 10px 30px rgba(0, 0, 0, 0.7)', 
+      },
+    },
   },
   plugins: [],
 };

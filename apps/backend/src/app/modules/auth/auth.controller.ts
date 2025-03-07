@@ -1,10 +1,9 @@
-import { Controller, Get, HttpStatus, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { handleError, respond } from '../../common/utils/response.util';
 import { createLogger } from '../../common/utils/logger.util';
 import { UsersService } from '../users/users.service';
 import { MusicPlatform } from '@prisma/client';
-import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
 import { isGuestUserSession } from '../../common/interfaces/user-session.interface';
 import { UsersSessionService } from '../users-session/users-session.service';
 
@@ -50,13 +49,20 @@ export class AuthController {
   }
 
   @Get('login/:provider') // TODO - init a session guest and upgrade it to an user
-  async login(@Req() req: Request, @Res() res: Response, @Param('provider') provider: string) {
+  async login(@Req() req: Request, @Res() res: Response, @Param('provider') provider: string, @Query('redirect') redirect?: string) {
     const validProvider = await this.getValidProvider(provider);
     if (!validProvider) {
       return respond(res).failure(HttpStatus.BAD_REQUEST, 'Unsupported music provider');
     }
 
-    return res.redirect(this.providerRoutes[validProvider].login);
+    let loginUrl = this.providerRoutes[validProvider].login;
+    
+    // TODO - check if the redirect is part of the backend
+    if (redirect) {
+      loginUrl = `${loginUrl}?state=${encodeURIComponent(redirect)}`;
+    }
+
+    return res.redirect(loginUrl);
   }
 
   @Get('refresh-token/:provider')

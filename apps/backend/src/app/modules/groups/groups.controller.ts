@@ -1,6 +1,6 @@
 import { GroupsService } from './groups.service';
 import { Request, Response } from 'express';
-import { Controller, Get, Post, Body, Param, Put, Delete, ParseUUIDPipe, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, ParseUUIDPipe, Req, Res, HttpStatus, UseGuards, UsePipes, ValidationPipe, ConflictException } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { UserSession } from '../../common/interfaces/user-session.interface';
@@ -17,12 +17,13 @@ export class GroupsController {
   constructor(private readonly groupsService: GroupsService) { }
 
   @Post()
-  @UseGuards(RegisteredUserGuard)
+  @UseGuards(RegisteredUserGuard) 
   async createGroup(@Body() dto: CreateGroupDto, @Req() req: Request, @Res() res: Response) {
     try
     {
       const userId = (req.session.user as UserSession).userId;
-      this.groupsService.ensureGroupNameIsUnique(userId, dto.name);
+
+      await this.groupsService.ensureGroupNameIsUnique(userId, dto.name);
       const group = await this.groupsService.createGroup(userId, dto);
 
       return respond(res).success(HttpStatus.CREATED, group);
@@ -68,6 +69,7 @@ export class GroupsController {
 
   @Put(':id')
   @UseGuards(RegisteredUserGuard)
+  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true }))
   async updateGroup(
     @Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateGroupDto,
     @Req() req: Request, @Res() res: Response
@@ -82,6 +84,7 @@ export class GroupsController {
     }
     catch(error)
     {
+      console.error(error);  
       handleError(res, error);
     }
   }
