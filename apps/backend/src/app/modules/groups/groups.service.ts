@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
@@ -9,6 +9,18 @@ import { v4 as uuidv4 } from 'uuid';
 export class GroupsService {
     constructor(private prisma: PrismaService) { }
 
+    async findUserGroup(id: string, userId: string): Promise<Group> {
+        const group = await this.prisma.group.findUnique({
+            where: { id },
+        });
+
+        if (!group || group.creatorId !== userId) {
+            throw new NotFoundException('Group not found');
+        }
+
+        return group;
+    }
+
     async createGroup(creatorId: string, dto: CreateGroupDto): Promise<Group> {
         return this.prisma.group.create({
             data: {
@@ -17,73 +29,30 @@ export class GroupsService {
                 creator: {
                     connect: { id: creatorId }
                 },
-                isActive: true,
+                isActive: false,
             },
         });
     }
 
-    async updateGroup(id: string, creatorId: string, dto: UpdateGroupDto): Promise<Group> {
-        const group = await this.prisma.group.findUnique({
-            where: { id },
-        });
+    async deleteGroup(id: string, userId: string): Promise<void> {
+        await this.findUserGroup(id, userId);
+       
+        await this.prisma.group.delete({ where: { id } });
+    }
 
-        if (!group) {
-            throw new NotFoundException('Group not found');
-        }
-
-        if (group.creatorId !== creatorId) {
-            throw new ForbiddenException('You do not have permission to update this group');
-        }
-
-        // Update the group
+    async updateGroup(id: string, userId: string, dto: Partial<UpdateGroupDto>): Promise<Group> {
+        await this.findUserGroup(id, userId);
+        
         return this.prisma.group.update({
             where: { id },
             data: dto,
         });
     }
 
-    async deleteGroup(id: string, creatorId: string): Promise<void> {
-        const group = await this.prisma.group.findUnique({ where: { id, creatorId } });
-        if (!group) {
-            throw new NotFoundException('Group not found or access denied');
-        }
-
-        await this.prisma.group.delete({ where: { id, creatorId } });
-    }
-
-    async updateGroupImage(id: string, userId: string, imageUrl: string): Promise<Group> {
-        const group = await this.prisma.group.findUnique({
-            where: { id },
-        });
-
-        if (!group) {
-            throw new NotFoundException('Group not found');
-        }
-
-        if (group.creatorId !== userId) {
-            throw new ForbiddenException('You do not have permission to update this group');
-        }
-
-        return this.prisma.group.update({
-            where: { id },
-            data: { imageUrl }, 
-        });
-    }
-
-    async getUserGroups(creatorId: string): Promise<Group[]> {
+    async getUserGroups(userId: string): Promise<Group[]> {
         return await this.prisma.group.findMany({
-            where: { creatorId }
+            where: { creatorId: userId }
         });
-    }
-
-    async getGroupById(id: string, creatorId: string): Promise<Group> {
-        const group = await this.prisma.group.findFirst({
-            where: { id, creatorId },
-            include: { creator: true, invites: true },
-        });
-
-        if (!group) throw new NotFoundException('Group not found');
-        return group;
     }
 
     async getAllGroups(): Promise<Group[]> {

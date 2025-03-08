@@ -1,4 +1,3 @@
-import { extractUserId } from "../_utils/userUtils";
 import { GroupCard } from "./cards/GroupCard";
 import { CreateGroupCard } from "./cards/CreateGroupCard";
 import { UserProfile } from "@frontend/shared";
@@ -6,13 +5,11 @@ import { useGroupsContext } from "../contexts/groupsContext";
 import { Dispatch, SetStateAction, useEffect } from "react";
 
 interface GroupsContainerProps {
-    profile: UserProfile,
     cardsSize: number
     setGroupsCount?: Dispatch<SetStateAction<number>>;
 }
 
-export const GroupsContainer = ({profile, cardsSize, setGroupsCount}: GroupsContainerProps) => {
-    const userId = extractUserId(profile);
+export const GroupsContainer = ({cardsSize, setGroupsCount}: GroupsContainerProps) => {
     const { groups } = useGroupsContext();
 
     useEffect(() => {

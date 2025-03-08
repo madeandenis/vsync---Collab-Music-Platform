@@ -5,6 +5,10 @@ export const fetchUserGroups = async(): Promise<Group[]> => {
     return await fetchApi('/api/groups');
 }
 
+export const fetchUserGroup = async (groupId: string): Promise<Group> => {
+    return await fetchApi(`/api/groups/${groupId}`);
+};
+
 export const createUserGroup = async (groupDto: CreateGroupDto): Promise<Group> => {
     return await fetchApi('/api/groups', {
         method: 'POST',
@@ -22,6 +26,12 @@ export const updateUserGroup = async (groupId: string, groupDto: UpdateGroupDto)
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(groupDto),
+    });
+};
+
+export const deleteUserGroup = async (groupId: string): Promise<Group> => {
+    return await fetchApi(`/api/groups/${groupId}`, {
+        method: 'DELETE',
     });
 };
 

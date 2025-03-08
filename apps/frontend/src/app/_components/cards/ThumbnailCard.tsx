@@ -2,7 +2,7 @@ import React from "react";
 
 interface ThumbnailCardProps {
     thumbnail: React.ReactNode;
-    name: string;
+    name: string | React.ReactNode;
     onClick?: () => void;
 }
 

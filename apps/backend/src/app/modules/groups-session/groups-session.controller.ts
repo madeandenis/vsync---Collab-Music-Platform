@@ -1,72 +1,79 @@
-import { Controller, Delete, Get, HttpStatus, Param, ParseUUIDPipe, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, ParseUUIDPipe, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { handleError, respond } from '../../common/utils/response.util';
 import { GroupsSesionService } from './groups-session.service';
-import { Throttle } from '@nestjs/throttler';
 import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
 import { GroupOwnershipGuard } from '../../common/guards/group-ownership.guard';
-import { GroupsSessionCache } from '../cache/services/groups-session-cache.service';
 import { UserSession } from '../../common/interfaces/user-session.interface';
+import { GroupSession } from '../../common/interfaces/group-session.interface';
+import { createLogger } from '../../common/utils/logger.util';
+import { GroupsService } from '../groups/groups.service';
 
-@Controller('groups-sesion')
+@Controller('groups/:groupId/session')
 @UseGuards(RegisteredUserGuard)
 export class GroupsSesionController {
-  constructor(
-    private readonly groupsSessionService: GroupsSesionService,
-    private readonly groupsSessionCache: GroupsSessionCache
-  ) {}
 
-  @Post(':groupId')
+  private readonly logger = createLogger(GroupsSesionController.name);
+
+  constructor(
+    private readonly groupsService: GroupsService,
+    private readonly groupsSessionService: GroupsSesionService
+  ) { }
+
+  @Post('start')
   @UseGuards(GroupOwnershipGuard)
-  @Throttle({ default: { limit: 5, ttl: 60 } }) 
-  public async createGroupSession(@Res() res: Response, @Req() req: Request, @Param('groupId', ParseUUIDPipe) groupId: string)
-  {
+  public async startGroupSession(@Res() res: Response, @Req() req: Request, @Param('groupId', ParseUUIDPipe) groupId: string) {
     try {
       const user = req.session.user as UserSession;
-      const groupSession = await this.groupsSessionService.createGroupSession(groupId, user);
+      
+      await this.groupsSessionService.createGroupSession(groupId, user);
+      await this.groupsService.updateGroup(
+        groupId,
+        user.userId,
+        { isActive: true }
+      )
 
-      return respond(res).success(HttpStatus.CREATED, groupSession);
-    } 
-    catch(error)
-    {
-      handleError(error, res)
+      return respond(res).success(HttpStatus.CREATED);
+    } catch (error) {
+      this.logger.error(error, 'Start session error')
+      handleError(res, error);
     }
   }
 
-  @Get(':groupId')
+  @Get('status')
   @UseGuards(GroupOwnershipGuard)
-  public async getGroupSession(@Res() res: Response, @Param('groupId', ParseUUIDPipe) groupId: string)
-  {
+  public async getGroupSessionStatus(@Res() res: Response, @Param('groupId', ParseUUIDPipe) groupId: string) {
     try {
-      const session = await this.groupsSessionCache.get(groupId);
-      
-      if (!session)
-      {
+      const session: GroupSession = await this.groupsSessionService.cache.get(groupId);
+
+      if (!session) {
         return respond(res).failure(HttpStatus.NOT_FOUND, 'No active session found for this group');
       }
 
       return respond(res).success(HttpStatus.OK, session);
-    } 
-    catch(error)
-    {
-      handleError(error, res)
+    } catch (error) {
+      this.logger.error(error, 'Status session error')
+      handleError(res, error);
     }
   }
-  
-  @Delete(':groupId')
+
+  @Post('stop')
   @UseGuards(GroupOwnershipGuard)
-  @Throttle({ default: { limit: 5, ttl: 60 } }) 
-  public async endGroupSession(@Res() res: Response, @Param('groupId', ParseUUIDPipe) groupId: string)
-  {
-    try
-     {
+  public async stopGroupSession(@Res() res: Response, @Req() req: Request, @Param('groupId', ParseUUIDPipe) groupId: string) {
+    try {
+      const user = req.session.user as UserSession;
+
       await this.groupsSessionService.endGroupSession(groupId);
+      await this.groupsService.updateGroup(
+        groupId,
+        user.userId,
+        { isActive: false }
+      )
 
       return respond(res).success(HttpStatus.NO_CONTENT);
-    } 
-    catch(error)
-    {
-      handleError(error, res)
+    } catch (error) {
+      this.logger.error(error, 'Stop session error')
+      handleError(res, error);
     }
   }
 }

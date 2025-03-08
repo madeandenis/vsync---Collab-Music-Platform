@@ -1,5 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsEnum } from 'class-validator';
-import { MusicPlatform } from '@prisma/client';
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
 
 
 export class UpdateGroupDto {
@@ -18,4 +17,8 @@ export class UpdateGroupDto {
   @IsBoolean()
   @IsOptional()
   isPublic?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }

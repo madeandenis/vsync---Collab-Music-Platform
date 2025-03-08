@@ -71,7 +71,7 @@ export class GroupsController {
   async getGroupById(@Param('groupId', ParseUUIDPipe) groupId: string, @Req() req: Request, @Res() res: Response) {
     try {
       const userId = (req.session.user as UserSession).userId;
-      const group = await this.groupsService.getGroupById(userId, groupId);
+      const group = await this.groupsService.findUserGroup(groupId, userId);
 
       return respond(res).success(HttpStatus.OK, group);
     }
@@ -82,7 +82,7 @@ export class GroupsController {
 
   @Put(':groupId')
   @UseGuards(RegisteredUserGuard)
-  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true }))
+  @UsePipes(new ValidationPipe({ forbidNonWhitelisted: true })) // TODO - add to all
   async updateGroup(
     @Param('groupId', ParseUUIDPipe) groupId: string, @Body() dto: UpdateGroupDto,
     @Req() req: Request, @Res() res: Response
@@ -103,7 +103,7 @@ export class GroupsController {
   async deleteGroup(@Param('groupId', ParseUUIDPipe) groupId: string, @Req() req: Request, @Res() res: Response) {
     try {
       const userId = (req.session.user as UserSession).userId;
-      await this.groupsService.deleteGroup(userId, groupId);
+      await this.groupsService.deleteGroup(groupId, userId);
 
       return respond(res).success(HttpStatus.NO_CONTENT);
     }
@@ -128,12 +128,16 @@ export class GroupsController {
         .resize(180, 180, { fit: 'cover' })
         .toFormat('webp', { quality: 80 })
         .toBuffer()
-        .catch((error) => {
+        .catch(() => {
           throw new BadRequestException('Invalid image file');
         });
 
       await this.uploadService.uploadImage(imageBuffer, filename);
-      const updatedGroup = await this.groupsService.updateGroupImage(groupId, userId, `${this.thumbnailResourceUrl}/${groupId}`);
+      const updatedGroup = await this.groupsService.updateGroup(
+        groupId,
+        userId,
+        { imageUrl: `${this.thumbnailResourceUrl}/${groupId}`}
+      );
 
       return respond(res).success(HttpStatus.OK, updatedGroup);
     } catch (error) {

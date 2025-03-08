@@ -16,6 +16,11 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
             throw new FetchError(status, body, url);
         }
 
+        // Handle No Content responses (No/Reset Content, Not Modified)
+        if ([204, 205, 304].includes(status)) {
+            return {} as T;  
+        }
+
         const apiResponse = await responseClone.json();
         return apiResponse.data;
 

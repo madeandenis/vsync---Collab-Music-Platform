@@ -20,7 +20,7 @@ export default function ProfilePage() {
             <ProfileCard profile={profile} groupsCount={groupsCount}/>
             <GroupsProvider profile={profile}>
                 <div className="flex-grow overflow-auto mb-12">
-                    <GroupsContainer profile={profile} cardsSize={150} setGroupsCount={setGroupsCount}/>
+                    <GroupsContainer cardsSize={150} setGroupsCount={setGroupsCount}/>
                 </div>
             </GroupsProvider>
         </div>

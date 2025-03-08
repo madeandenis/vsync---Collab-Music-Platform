@@ -14,6 +14,7 @@ module.exports = {
     extend: {
       colors: {
         graphite: '#282828',
+        charcoalBlack: '#101010',
         spotifyGreen: '#1DB954',
         ytMusicRed: '#ff0033',
         ytMusicBlack: '#020202',

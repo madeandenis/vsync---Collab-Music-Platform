@@ -15,7 +15,7 @@ const OptionsList = ({ options, hideLabels = false }: OptionsListProps) => (
             <li
                 key={index}
                 onClick={option.action}
-                className="p-3 my-1 flex justify-center items-center gap-1 hover:bg-white/20 border border-white border-opacity-20 rounded-lg"
+                className="p-2 my-2 flex justify-center items-center hover:bg-white/20 border border-white border-opacity-20 rounded-lg"
             >
                 { option.icon && <span>{option.icon}</span>}
                 { !hideLabels && <span className="text-xs">{option.label}</span>}

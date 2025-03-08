@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 import { GroupsService } from '../../modules/groups/groups.service';
 import { UserSession } from '../interfaces/user-session.interface';
@@ -12,10 +12,7 @@ export class GroupOwnershipGuard implements CanActivate {
     const groupId = request.params.groupId;
     const user = request.session.user as UserSession; 
 
-    const isOwner = await this.groupsService.getGroupById(groupId, user.userId);
-    if (!isOwner) {
-      throw new ForbiddenException('You do not have permission to perform this action.');
-    }
+    await this.groupsService.findUserGroup(groupId, user.userId);
 
     return true;
   }

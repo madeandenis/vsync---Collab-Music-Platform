@@ -1,35 +1,20 @@
-import { FaEdit, FaEllipsisH, FaPlay, FaStop, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaEllipsisH, FaTrash } from 'react-icons/fa';
 import OptionsList, { Option } from './OptionsList';
 import { useEffect, useRef, useState } from 'react';
 import { EditGroupForm } from './forms/EditGroupForm';
 import { Group } from '@frontend/shared';
+import DeleteGroupForm from './forms/DeleteGroupForm';
 
 interface GroupOptionsProps {
     buttonSize: number;
     group: Group;
 }
 
-const StartSession: Option = {
-    label: 'Start Session',
-    icon: <FaPlay className='text-emerald-500' />,
-}
-const StopSession: Option = {
-    label: 'Stop Session',
-    icon: <FaStop className='text-emerald-500' />,
-}
-const EditGroup: Option = {
-    label: 'Edit Group',
-    icon: <FaEdit className='text-blue-300' />,
-}
-const DeleteGroup: Option = {
-    label: 'Delete Group',
-    icon: <FaTrash className='text-rose-600' />,
-}
-
 export const GroupOptions = ({ buttonSize, group }: GroupOptionsProps) => {
 
     const [openList, setOpenList] = useState(false);
     const [openEditForm, setEditOpenForm] = useState(false);
+    const [openDeleteForm, setDeleteOpenForm] = useState(false);
     const groupOptionsRef = useRef<HTMLDivElement>(null);
 
     const toggleOpenList = () => setOpenList((prevState) => !prevState);
@@ -52,24 +37,34 @@ export const GroupOptions = ({ buttonSize, group }: GroupOptionsProps) => {
         };
     }, []);
 
-    EditGroup.action = setEditOpenForm;
+    const EditGroup: Option = {
+        label: 'Edit Group',
+        icon: <FaEdit className='text-blue-300' />,
+        action: () => setEditOpenForm(true),
+    }
+    const DeleteGroup: Option = {
+        label: 'Delete Group',
+        icon: <FaTrash className='text-red-500' />,
+        action: () => setDeleteOpenForm(true),
+    }
 
-    const options: Option[] = [group.isActive ? StopSession : StartSession, EditGroup, DeleteGroup]
+    const options: Option[] = [EditGroup, DeleteGroup]
 
     return (
         <div
             ref={groupOptionsRef}
             className={
-                `p-2 flex flex-col items-center
+                `p-2 flex flex-col items-center rounded-full
                     ${openList
-                    ? 'bg-black/90 hover:bg-black/90'
+                    ? 'bg-black/90 hover:bg-black/90 rounded-xl'
                     : 'bg-white/15 hover:bg-white/30'
                 }
-                    transition-all rounded-full`
+                transition-all ease-in-out`
             }>
             <FaEllipsisH size={buttonSize} className='text-white' onClick={() => toggleOpenList()} />
             {openList && <OptionsList options={options} hideLabels={true} />}
             {openEditForm && <EditGroupForm setOpen={setEditOpenForm} group={group} />}
+            {openDeleteForm && <DeleteGroupForm setOpen={setDeleteOpenForm} group={group}/>}
         </div>
     );
 

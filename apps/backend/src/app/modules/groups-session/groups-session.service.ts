@@ -10,17 +10,13 @@ export class GroupsSesionService {
 
     private readonly logger = createLogger(GroupsSesionService.name);
     
-    constructor(private readonly groupSessionCache: GroupsSessionCache) {}
+    constructor(public readonly cache: GroupsSessionCache) {}
 
     async createGroupSession(groupId: string, user: UserSession)
     {
-        if(this.groupSessionCache.has(groupId))
-        {
-            throw new BadRequestException(`A session already exists for group ID: ${groupId}`);
-        }
         try
         {
-            await this.groupSessionCache.set(
+            await this.cache.set(
                 groupId,
                 this.initGroupSession(groupId, user.activeAccount.provider)
             )
@@ -33,12 +29,9 @@ export class GroupsSesionService {
     }
 
     async endGroupSession(groupId: string) {
-        if (!this.groupSessionCache.has(groupId)) {
-            throw new BadRequestException(`No active session found for group ID: ${groupId}`);
-        }
         try 
         {
-            await this.groupSessionCache.delete(groupId);
+            await this.cache.delete(groupId);
         } 
         catch(error)
         {

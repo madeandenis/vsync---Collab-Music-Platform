@@ -42,7 +42,7 @@ export default function useGroupForm(group?: Group) {
 
     const { profile } = useUserContext();
     const { setAlert } = useAlertContext();
-    const { refetch } = useGroupsContext();
+    const { refetchAll } = useGroupsContext();
 
     const setThumbnailSrc = (file: File | null) => {
         if (!file) return setThumbnailSrcState(null);
@@ -117,7 +117,7 @@ export default function useGroupForm(group?: Group) {
                 return;
             }
 
-            refetch();
+            refetchAll();
         }
     });
 
@@ -133,7 +133,7 @@ export default function useGroupForm(group?: Group) {
                 return;
             }
 
-            refetch();
+            refetchAll();
         }
     });
 
@@ -141,10 +141,10 @@ export default function useGroupForm(group?: Group) {
         mutationFn: ({ groupId, thumbnail }: { groupId: string; thumbnail: File }) =>
             uploadGroupThumbnail(groupId, thumbnail),
         onSuccess: () => {
-            refetch();
+            refetchAll();
         },
         onError: () => {
-            refetch();
+            refetchAll();
         }
     });
 
