@@ -37,7 +37,7 @@ export class GroupsController {
   }
 
   @Post()
-  @UseGuards(RegisteredUserGuard)
+  @UseGuards(RegisteredUserGuard) 
   async createGroup(@Body() dto: CreateGroupDto, @Req() req: Request, @Res() res: Response) {
     try {
       const userId = (req.session.user as UserSession).userId;
