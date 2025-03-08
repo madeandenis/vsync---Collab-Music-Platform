@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
@@ -23,13 +23,21 @@ export class GroupsService {
     }
 
     async updateGroup(id: string, creatorId: string, dto: UpdateGroupDto): Promise<Group> {
-        const group = await this.prisma.group.findUnique({ where: { id, creatorId } });
+        const group = await this.prisma.group.findUnique({
+            where: { id },
+        });
+
         if (!group) {
-            throw new NotFoundException('Group not found or access denied');
+            throw new NotFoundException('Group not found');
         }
 
+        if (group.creatorId !== creatorId) {
+            throw new ForbiddenException('You do not have permission to update this group');
+        }
+
+        // Update the group
         return this.prisma.group.update({
-            where: { id, creatorId },
+            where: { id },
             data: dto,
         });
     }
@@ -41,6 +49,25 @@ export class GroupsService {
         }
 
         await this.prisma.group.delete({ where: { id, creatorId } });
+    }
+
+    async updateGroupImage(id: string, userId: string, imageUrl: string): Promise<Group> {
+        const group = await this.prisma.group.findUnique({
+            where: { id },
+        });
+
+        if (!group) {
+            throw new NotFoundException('Group not found');
+        }
+
+        if (group.creatorId !== userId) {
+            throw new ForbiddenException('You do not have permission to update this group');
+        }
+
+        return this.prisma.group.update({
+            where: { id },
+            data: { imageUrl }, 
+        });
     }
 
     async getUserGroups(creatorId: string): Promise<Group[]> {
@@ -64,7 +91,7 @@ export class GroupsService {
     }
 
     async getGroupByIdAdmin(id: string): Promise<Group> {
-        const group = await this.prisma.group.findUnique({ 
+        const group = await this.prisma.group.findUnique({
             where: { id },
             include: { creator: true, invites: true },
         });

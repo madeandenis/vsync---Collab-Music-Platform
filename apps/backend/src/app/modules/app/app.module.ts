@@ -14,6 +14,7 @@ import { UsersProfileModule } from '../users-profile/users-profile.module';
 import { UsersSessionModule } from '../users-session/users-session.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from '../../common/interceptors/log.interceptor';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LoggingInterceptor } from '../../common/interceptors/log.interceptor';
     UsersModule,
     UsersSessionModule,
     UsersProfileModule,
+    UploadModule,
     ConfigModule.forRoot({
       isGlobal: true, 
       validationSchema: Joi.object({
@@ -45,6 +47,9 @@ import { LoggingInterceptor } from '../../common/interceptors/log.interceptor';
         HOST: Joi.string().default('localhost'),
         API_PORT: Joi.number(),
         CLIENT_PORT: Joi.number(),
+
+        // Server token
+        X_SERVER_TOKEN: Joi.string(),
       }),
     }),
     RedisModule.forRootAsync({

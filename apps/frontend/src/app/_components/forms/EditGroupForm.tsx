@@ -1,12 +1,14 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import useGroupForm from "../../_hooks/useGroupForm";
 import { GroupForm } from "./GroupForm";
+import { Group } from "@frontend/shared";
 
-interface CreateGroupFormProps {
+interface EditGroupFormProps {
+    group: Group;
     setOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-export const CreateGroupForm = ({ setOpen }: CreateGroupFormProps) => {
-    const context = useGroupForm();
+export const EditGroupForm = ({ group, setOpen }: EditGroupFormProps) => {
+    const context = useGroupForm(group);
     return <GroupForm setOpen={setOpen} context={context}/>
 }

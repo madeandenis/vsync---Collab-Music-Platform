@@ -1,7 +1,7 @@
 export interface Option {
     label: string;
     icon?: React.ReactNode;
-    action?: () => void; 
+    action?: (...args: any[]) => void;
 }
 
 interface OptionsListProps {

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
-import { createUserGroup } from '../_api/groupsApi';
-import { CreateGroupDto, Group } from '@frontend/shared';
+import { createUserGroup, updateUserGroup, uploadGroupThumbnail } from '../_api/groupsApi';
+import { CreateGroupDto, Group, UpdateGroupDto } from '@frontend/shared';
 import { useUserContext } from '../contexts/userContext';
 import { normalize } from '../_utils/sanitizeUtils';
 import { useAlertContext } from '../contexts/alertContext';
@@ -9,35 +9,43 @@ import { useGroupsContext } from '../contexts/groupsContext';
 
 interface GroupFormState {
     name: string;
-    description: string | undefined;
-    thumbnailSrc: string | undefined;
-    thumbnailError: string | undefined;
+    description: string;
+    thumbnailSrc: string | null;
+    thumbnailError: string | null;
 }
 
 interface GroupFormSetters {
     setName: Dispatch<SetStateAction<string>>;
-    setDescription: Dispatch<SetStateAction<string | undefined>>;
+    setDescription: Dispatch<SetStateAction<string>>;
     setThumbnail: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    setThumbnailSrc: (file?: File) => void | (() => void);
+    setThumbnailSrc: (file: File | null) => void | (() => void);
     setThumbnailError: (error: string) => void;
     createGroup: () => void;
     updateGroup: () => void;
     deleteGroup: () => void;
 }
 
+export interface GroupFormContext {
+    state: GroupFormState;
+    setters: GroupFormSetters
+}
+
 export default function useGroupForm(group?: Group) {
-    const [name, setName] = useState<string>(group?.name ?? '');
-    const [description, setDescription] = useState<string | undefined>(group?.description ?? undefined);
-    const [thumbnailSrc, setThumbnailSrcState] = useState<string | undefined>(group?.imageUrl ?? undefined);
-    const [thumbnailError, setThumbnailErrorState] = useState<string | undefined>(undefined);
+    const [name, setName] = useState<string>(group?.name ?? "");
+    const [description, setDescription] = useState<string>(group?.description ?? "");
+    const [thumbnailSrc, setThumbnailSrcState] = useState<string | null>(
+        group?.imageUrl ? `${group.imageUrl}?v=${Date.now()}` : null // Cache busting
+    );
+    const [thumbnailError, setThumbnailErrorState] = useState<string | null>(null);
+    const [thumbnail, setThumbnailState] = useState<File | null>(null);
     const timeoutId = useRef<NodeJS.Timeout | null>(null);
 
     const { profile } = useUserContext();
-    const { setAlert } = useAlertContext(); 
+    const { setAlert } = useAlertContext();
     const { refetch } = useGroupsContext();
 
-    const setThumbnailSrc = (file?: File) => {
-        if(!file) return setThumbnailSrcState(undefined);
+    const setThumbnailSrc = (file: File | null) => {
+        if (!file) return setThumbnailSrcState(null);
 
         const objectUrl = URL.createObjectURL(file);
         setThumbnailSrcState(objectUrl);
@@ -49,16 +57,16 @@ export default function useGroupForm(group?: Group) {
         }
         setThumbnailErrorState(error);
         timeoutId.current = setTimeout(() => {
-            setThumbnailErrorState(undefined);
+            setThumbnailErrorState(null);
         }, 3000);
     };
 
-
+    // TODO - strip file of data & rename
     const setThumbnail = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        const maxSize = 2 * 1024 * 1024;
+        const maxSize = 1 * 1024 * 1024;
         const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'];
-    
+
         if (!files) return;
 
         const selectedFile = files[0];
@@ -81,13 +89,14 @@ export default function useGroupForm(group?: Group) {
             const image = new Image();
 
             image.onload = () => {
-                setThumbnailSrc(selectedFile); 
+                setThumbnailState(selectedFile);
+                setThumbnailSrc(selectedFile);
             };
-    
+
             image.onerror = () => {
                 setThumbnailError('The file is not a valid image.');
             };
-    
+
             image.src = reader.result as string; // try to load it into the Image object
         };
         reader.onerror = () => {
@@ -97,10 +106,44 @@ export default function useGroupForm(group?: Group) {
         reader.readAsDataURL(selectedFile);
     };
 
-    const mutation = useMutation({
+    const createGroupRequest = useMutation({
         mutationFn: createUserGroup,
-        onSuccess: () => {
+        onSuccess: (group) => {
             setAlert(`${name} created!`, 'success')
+            
+            if(thumbnail)
+            {
+                uploadThumbnailRequest.mutate({groupId: group.id,thumbnail})
+                return;
+            }
+
+            refetch();
+        }
+    });
+
+    const updateGroupRequest = useMutation({
+        mutationFn: ({ groupId, groupData }: { groupId: string; groupData: UpdateGroupDto }) =>
+            updateUserGroup(groupId, groupData),
+        onSuccess: (group) => {
+            setAlert(`${name} updated!`, 'success')
+
+            if(thumbnail)
+            {
+                uploadThumbnailRequest.mutate({groupId: group.id,thumbnail})
+                return;
+            }
+
+            refetch();
+        }
+    });
+
+    const uploadThumbnailRequest = useMutation({
+        mutationFn: ({ groupId, thumbnail }: { groupId: string; thumbnail: File }) =>
+            uploadGroupThumbnail(groupId, thumbnail),
+        onSuccess: () => {
+            refetch();
+        },
+        onError: () => {
             refetch();
         }
     });
@@ -109,21 +152,40 @@ export default function useGroupForm(group?: Group) {
         if (!profile) return;
 
         const dtoName = normalize(name);
+        if (dtoName === '') return;
         const dtoDescription = normalize(description);
 
         const groupDto: CreateGroupDto = {
-            name: dtoName, 
-            description: dtoDescription, 
+            name: dtoName,
+            description: dtoDescription,
             imageUrl: '',
             isPublic: false,
-            platform: profile.platform, 
-        } 
+            platform: profile.platform,
+        }
 
-        mutation.mutate(groupDto);
+        createGroupRequest.mutate(groupDto);
     };
 
-    const updateGroup = () => {};
-    const deleteGroup = () => {};
+    const updateGroup = () => {
+        if (!profile || !group) return;
+
+        const dtoName = normalize(name);
+        if (dtoName === '') return;
+        const dtoDescription = normalize(description);
+
+        const groupDto: UpdateGroupDto = {
+            name: dtoName,
+            description: dtoDescription,
+            isPublic: false,
+        }
+
+        updateGroupRequest.mutate({
+            groupId: group.id,
+            groupData: groupDto
+        });
+    };
+
+    const deleteGroup = () => { };
 
     const state: GroupFormState = {
         name,
@@ -145,5 +207,5 @@ export default function useGroupForm(group?: Group) {
     return {
         state,
         setters
-    }
+    } as GroupFormContext
 } 

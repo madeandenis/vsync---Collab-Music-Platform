@@ -11,15 +11,19 @@ interface GroupCardProps {
 
 export const GroupCard = ({ group, size }: GroupCardProps) => {
 
+    const timestamp = new Date().getTime();
+    // Enforce cache busting 
+    const imageUrl = group.imageUrl ? `${group.imageUrl}?v=${timestamp}` : undefined; 
+
     const thumbnail = (
         <Thumbnail
-            src={group.imageUrl ?? undefined}
+            src={imageUrl ?? undefined}
             placeHolder={<FaUsers size={size/2} />}
             alt={`${group.name}-thumbnail`}
             size={size}
         >
             <div className="absolute top-1 right-1 z-10">
-                <GroupOptions size={size/7} activeSession={group.isActive}/>    
+                <GroupOptions buttonSize={size/7} group={group}/>    
             </div>
         </Thumbnail>
     );
