@@ -1,35 +1,39 @@
 import { WsException } from "@nestjs/websockets";
-import { GroupSession, mapUserToMember, Vote } from "../../common/interfaces/group-session.interface";
 import { AuthSocket } from "../../common/interfaces/socket-session.interface";
-import { GuestUserSession, isGuestUserSession, UserSession } from "../../common/interfaces/user-session.interface";
-import { QueuedTrack } from "../cache/services/track-queue.service";
-import { Track } from "@frontend/shared";
+import { GroupSession, GuestUserSession, isGuestUserSession, mapUserToMember, QueuedTrack, Track, UserSession, Vote } from "@frontend/shared";
 
 export class WsGroupSessionService 
 {
 
-    findUserVote(groupSession: GroupSession, client: AuthSocket)
+    findVote(groupSession: GroupSession, voterId: string, trackId: string): Vote
     {
-        const clientSessionID = client.sessionID;
-
-        return groupSession.votingHistory.find(vote => vote.voterId === clientSessionID);
+        return groupSession.votingHistory.find(vote => vote.voterId === voterId && vote.trackId === trackId);
     }
 
-    recordTrackVote(groupSession: GroupSession, trackId: string, voteWeight, client: AuthSocket)
+    updateVoteWeight(groupSession: GroupSession, voterId: string, trackId: string, voteWeight: number): void
     {
-        const clientSessionID = client.sessionID;
+        groupSession.votingHistory.forEach(vote => {
+            if(vote.voterId === voterId && vote.trackId === trackId)
+            {
+                vote.weight = voteWeight;
+                vote.timeStamp = new Date().toISOString();
+            }
+        });
+    }
 
+    recordTrackVote(groupSession: GroupSession, voterId: string, trackId: string, voteWeight: number)
+    {
         groupSession.votingHistory.push({
             trackId,
-            voterId: clientSessionID,
+            voterId,
             weight: voteWeight, 
             timeStamp: new Date().toISOString()
         })
     }
 
-    addClientToSession(groupSession: GroupSession, client: AuthSocket)
+    addClientToSession(groupSession: GroupSession, socket: AuthSocket)
     {
-        const clientSessionID = client.sessionID;
+        const clientSessionID = socket.data.sessionID;
 
         if(this.isSessionFull(groupSession))
         {
@@ -41,7 +45,7 @@ export class WsGroupSessionService
             return groupSession;
         }
 
-        const user = client.session?.user;
+        const user = socket.data.session?.user;
         const member = mapUserToMember(user);
 
         groupSession.metadata.membersCount++;
@@ -49,19 +53,21 @@ export class WsGroupSessionService
         groupSession.metadata.lastUpdated = new Date().toISOString();
     }
 
-    removeClientFromSession(groupSession: GroupSession, client: AuthSocket)
+    removeMemberFromSession(groupSession: GroupSession, socket: AuthSocket): boolean
     {
-        const clientSessionID = client.sessionID;
+        const sessionID = socket.data.sessionID;
 
-        const memberIndex = this.findMemberIndex(groupSession, clientSessionID);
+        const memberIndex = this.findMemberIndex(groupSession, sessionID);
         if(memberIndex === -1)
         {
-            throw new WsException(`Client is not part of the current group session.`);
+            return false; // if client was never added to the session (eg. failed connection atempt)
         }
 
         groupSession.metadata.membersCount--;
         groupSession.members.splice(memberIndex, 1);
         groupSession.metadata.lastUpdated = new Date().toISOString();
+
+        return true;
     }
 
     createQueuedTrack(trackDetails: Track, user: UserSession | GuestUserSession)

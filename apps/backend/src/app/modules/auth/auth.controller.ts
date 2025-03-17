@@ -1,11 +1,11 @@
 import { Controller, Get, HttpStatus, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { handleError, respond } from '../../common/utils/response.util';
+import { sendHttpErrorResponse, respond } from '../../common/utils/response.util';
 import { createLogger } from '../../common/utils/logger.util';
 import { UsersService } from '../users/users.service';
 import { MusicPlatform } from '@prisma/client';
-import { isGuestUserSession } from '../../common/interfaces/user-session.interface';
 import { UsersSessionService } from '../users-session/users-session.service';
+import { isGuestUserSession } from '@frontend/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -44,7 +44,7 @@ export class AuthController {
     catch(error)
     {
       this.logger.error(error, 'Error during logout process');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 

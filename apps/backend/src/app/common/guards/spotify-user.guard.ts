@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
 import { Request } from 'express';
 import { MusicPlatform } from '@prisma/client';
-import { UserSession } from '../interfaces/user-session.interface';
+import { UserSession } from '@frontend/shared';
 
 @Injectable()
 export class SpotifyUserGuard implements CanActivate {

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CacheService } from "./cache.service";
-import { GroupSession } from "../../../common/interfaces/group-session.interface";
+import { GroupSession } from "@frontend/shared";
 
 @Injectable()
 export class GroupsSessionCache extends CacheService<GroupSession> {

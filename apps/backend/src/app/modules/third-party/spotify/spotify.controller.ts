@@ -2,9 +2,9 @@ import { Response, Request } from 'express';
 import { Controller, Get, Res, Req, Query, HttpStatus, UseGuards, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { SpotifyService } from './spotify.service';
 import { generateRandomString } from '../../../common/utils/crypto.util';
-import { handleError, respond } from '../../../common/utils/response.util';
+import { sendHttpErrorResponse, respond } from '../../../common/utils/response.util';
 import { createLogger } from '../../../common/utils/logger.util';
-import { TokenData, UserProfile } from '@frontend/shared';
+import { isGuestUserSession, TokenData, UserProfile, UserSession } from '@frontend/shared';
 import { AuthService } from '../../auth/auth.service';
 import { MusicPlatform } from '@prisma/client';
 import { isValidUrl, splitUrl } from '../../../common/utils/url.util';
@@ -13,7 +13,6 @@ import { allowedDomains } from '../../../config/allowed-domains';
 import { RegisteredUserGuard } from '../../../common/guards/registered-user.guard';
 import { SpotifyUserGuard } from '../../../common/guards/spotify-user.guard';
 import { UsersSessionService } from '../../users-session/users-session.service';
-import { isGuestUserSession, UserSession } from '../../../common/interfaces/user-session.interface';
 import { TokenExpirationGuard } from '../../../common/guards/token-expiration.guard';
 import { ConfigService } from '@nestjs/config';
 
@@ -59,7 +58,7 @@ export class SpotifyController {
     catch(error)
     {
       this.logger.error(error, 'Error during Spotify login');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -111,7 +110,7 @@ export class SpotifyController {
     catch (error)
     {
       this.logger.error(error, 'Error during Spotify callback');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }    
   }
 
@@ -152,7 +151,7 @@ export class SpotifyController {
     catch(error)
     {
       this.logger.error(error, 'Error during Token refresh');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -171,7 +170,7 @@ export class SpotifyController {
     catch (error)
     {
       this.logger.error(error, 'Error during profile fetch');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -190,7 +189,7 @@ export class SpotifyController {
     catch (error)
     {
       this.logger.error(error, 'Error during playlists fetch');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -207,14 +206,14 @@ export class SpotifyController {
     {
       const user = req.session.user as UserSession;
       const accessToken = user.token.accessToken;
-      const tracks = this.spotifyService.searchTracks(accessToken, query);
+      const tracks = await this.spotifyService.searchTracks(accessToken, query);
 
       return respond(res).success(HttpStatus.OK, tracks);
     }
     catch(error)
     {
       this.logger.error(error, 'Error during tracks search');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 

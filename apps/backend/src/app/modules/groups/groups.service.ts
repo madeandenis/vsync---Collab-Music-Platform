@@ -9,16 +9,38 @@ import { v4 as uuidv4 } from 'uuid';
 export class GroupsService {
     constructor(private prisma: PrismaService) { }
 
-    async findUserGroup(id: string, userId: string): Promise<Group> {
+    async findGroup(id: string): Promise<Group> {
         const group = await this.prisma.group.findUnique({
             where: { id },
         });
 
-        if (!group || group.creatorId !== userId) {
-            throw new NotFoundException('Group not found');
+        if (!group) {
+            throw new NotFoundException(`Group with ID ${id} not found`);
         }
 
         return group;
+    }
+
+    async findUserGroup(id: string, userId: string): Promise<Group> {
+        const group = await this.findGroup(id);
+
+        if (group.creatorId !== userId) {
+            throw new NotFoundException(`Group with ID ${id} not found`);
+        }
+
+        return group;
+    }
+
+    async findAllGroups(): Promise<Group[]> {
+        const groups = await this.prisma.group.findMany();
+        return groups;
+    }
+    
+    async findUserGroups(userId: string): Promise<Group[]> {
+        const groups = await this.prisma.group.findMany({
+            where: { creatorId: userId }
+        });
+        return groups;
     }
 
     async createGroup(creatorId: string, dto: CreateGroupDto): Promise<Group> {
@@ -34,54 +56,30 @@ export class GroupsService {
         });
     }
 
-    async deleteGroup(id: string, userId: string): Promise<void> {
-        await this.findUserGroup(id, userId);
+    async deleteGroup(id: string, userId?: string): Promise<void> {
+        if(userId)
+            await this.findUserGroup(id, userId);
+        else
+            await this.findGroup(id);
        
-        await this.prisma.group.delete({ where: { id } });
+        await this.prisma.group.delete({ 
+            where: { id }
+        });
     }
 
-    async updateGroup(id: string, userId: string, dto: Partial<UpdateGroupDto>): Promise<Group> {
-        await this.findUserGroup(id, userId);
-        
+    async updateGroup(id: string, dto: Partial<UpdateGroupDto>, userId?: string): Promise<Group> {
+        if(userId)
+            await this.findUserGroup(id, userId);
+        else
+            await this.findGroup(id);
+
         return this.prisma.group.update({
             where: { id },
             data: dto,
         });
     }
 
-    async getUserGroups(userId: string): Promise<Group[]> {
-        return await this.prisma.group.findMany({
-            where: { creatorId: userId }
-        });
-    }
-
-    async getAllGroups(): Promise<Group[]> {
-        return await this.prisma.group.findMany();
-    }
-
-    async getGroupByIdAdmin(id: string): Promise<Group> {
-        const group = await this.prisma.group.findUnique({
-            where: { id },
-            include: { creator: true, invites: true },
-        });
-        if (!group) {
-            throw new NotFoundException('Group not found');
-        }
-        return group;
-    }
-
-    async updateGroupAdmin(id: string, dto: UpdateGroupDto): Promise<Group> {
-        const group = await this.getGroupByIdAdmin(id);
-        return this.prisma.group.update({
-            where: { id },
-            data: dto,
-        });
-    }
-
-    async deleteGroupAdmin(id: string): Promise<void> {
-        const group = await this.getGroupByIdAdmin(id);
-        await this.prisma.group.delete({ where: { id } });
-    }
+    // Not yet used 
 
     async createGroupInvite(groupId: string, expiresAt: Date): Promise<GroupInvite> {
         const group = await this.prisma.group.findUnique({ where: { id: groupId } });
@@ -109,7 +107,7 @@ export class GroupsService {
     }
 
     async updateSessionBackup(groupId: string, sessionData: any): Promise<Group> {
-        const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+        const group = await this.findGroup(groupId); 
         if (!group) {
             throw new NotFoundException('Group not found');
         }
@@ -120,7 +118,7 @@ export class GroupsService {
         });
     }
 
-    public async ensureGroupNameIsUnique(userId: string, name: string): Promise<void> {
+    public async ensureUniqueGroupName(userId: string, name: string): Promise<void> {
         const existingGroup = await this.prisma.group.findFirst({
             where: {
                 creatorId: userId,

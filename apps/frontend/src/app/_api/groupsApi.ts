@@ -1,6 +1,10 @@
 import { CreateGroupDto, Group, UpdateGroupDto } from "@frontend/shared";
 import { fetchApi } from "../_utils/fetchUtils";
 
+export const fetchGroup = async (groupId: string): Promise<Group> => {
+    return await fetchApi(`/api/groups/${groupId}/public`);
+};
+
 export const fetchUserGroups = async(): Promise<Group[]> => {
     return await fetchApi('/api/groups');
 }

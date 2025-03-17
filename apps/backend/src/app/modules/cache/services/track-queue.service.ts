@@ -1,47 +1,26 @@
-import { Track } from "@frontend/shared";
+import { QueuedTrack, ScoredTrack } from "@frontend/shared";
 import { CacheService } from "./cache.service";
-
-export interface QueuedTrack
-{
-    trackDetails: Track,
-    addedBy: { sessionId: string, username?: string };
-    addedAt: string;
-}
-
-export interface ScoredTrack
-{
-    queuedTrack: QueuedTrack,
-    score?: number
-}
 
 export class TrackQueueService extends CacheService<unknown>
 {
     protected prefix = 'track:queue';
     private key = (groupId) => `${this.prefix}:${groupId}`;
 
-    async addTrack(groupId: string, scoredTrack: ScoredTrack)
+    async addTrack(groupId: string, scoredTrack: ScoredTrack): Promise<void>
     {
-        const serializedTrack = JSON.stringify(scoredTrack.queuedTrack); 
+        const serializedTrack = JSON.stringify(scoredTrack.queuedTrack);
+
         await this.client.zadd(
-            this.key(groupId),  
+            this.key(groupId), 
             scoredTrack.score,
             serializedTrack
-        )
+        );
     }
 
-    async getScore(groupId: string, queuedTrack: QueuedTrack)
-    {
-        const serializedTrack = JSON.stringify(queuedTrack);
-        const score = await this.client.zscore(
-            this.key(groupId),  
-            serializedTrack
-        )
-        return score !== null && score !== undefined ? parseFloat(score) : null;
-    }
-
+    // From high to low
     async getQueue(groupId: string): Promise<ScoredTrack[]>
     {
-        const tracksSerialized = await this.client.zrange(
+        const tracksSerialized = await this.client.zrevrange(
             this.key(groupId),  
             0,  // start index
             -1, // end index
@@ -61,7 +40,24 @@ export class TrackQueueService extends CacheService<unknown>
         return scoredTracks;
     }
 
-    async removeTrack(groupId: string, queuedTrack: QueuedTrack)
+    async updateQueue(groupId: string, queue: ScoredTrack[]): Promise<void>
+    {
+        const key = this.key(groupId);
+
+        // redis transaction
+        const multi = this.client.multi();
+
+        multi.del(key);
+
+        for (const track of queue) {
+            const serializedTrack = JSON.stringify(track.queuedTrack);
+            multi.zadd(key, track.score, serializedTrack);
+        }
+
+        await multi.exec();
+    }
+
+    async removeTrack(groupId: string, queuedTrack: QueuedTrack): Promise<void>
     {
         const serializedTrack = JSON.stringify(queuedTrack); 
         await this.client.zrem(
@@ -70,7 +66,7 @@ export class TrackQueueService extends CacheService<unknown>
         );
     }
 
-    async voteTrack(groupId: string, queuedTrack: QueuedTrack, voteWeight: number)
+    async voteTrack(groupId: string, queuedTrack: QueuedTrack, voteWeight: number): Promise<void>
     {
         const serializedTrack = JSON.stringify(queuedTrack); 
         await this.client.zincrby(

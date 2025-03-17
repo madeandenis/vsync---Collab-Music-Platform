@@ -1,6 +1,6 @@
+import { isGuestUserSession } from '@frontend/shared';
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
-import { isGuestUserSession } from '../interfaces/user-session.interface';
 
 @Injectable()
 export class RegisteredUserGuard implements CanActivate {

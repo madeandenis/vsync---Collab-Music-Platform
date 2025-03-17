@@ -35,7 +35,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, [isClient]);
 
     const { data, error } = useQuery({
-        queryKey: ['userProfile'],
+        queryKey: ['user-profile'],
         queryFn: fetchUserProfile,
         enabled: !profile && hydratedProfile,
         retry: false

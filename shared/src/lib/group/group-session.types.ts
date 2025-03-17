@@ -1,10 +1,10 @@
 import { MusicPlatform } from "@prisma/client";
-import { GuestUserSession, isUserSession, UserSession } from "./user-session.interface";
+import { GuestUserSession, isUserSession, UserSession } from "../user/user-session.types";
 
 export interface Vote {
     trackId: string;
     voterId: string;
-    weight: 1 | -1;
+    weight: number;
     timeStamp: string;
 }
 
@@ -37,7 +37,7 @@ export interface GroupSession {
     }
 }
 
-export const mapUserToMember = (session: UserSession | GuestUserSession): Member =>
+export const mapUserToMember = (session: UserSession | GuestUserSession ): Member =>
     isUserSession(session)
       ? {
           sessionId: session.sessionId,

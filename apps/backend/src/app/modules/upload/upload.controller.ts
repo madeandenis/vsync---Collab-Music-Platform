@@ -2,7 +2,7 @@ import { Controller, Get, NotFoundException, Param, Post, Req, Res, StreamableFi
 import { Request, Response } from 'express';
 import { UploadService } from './upload.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { handleError, respond } from '../../common/utils/response.util';
+import { sendHttpErrorResponse, respond } from '../../common/utils/response.util';
 import { imageUploadConfig } from './upload.config';
 import { createLogger } from '../../common/utils/logger.util';
 import { ServerTokenGuard } from '../../common/guards/server-token.guard';
@@ -22,7 +22,7 @@ export class UploadController {
       return respond(res).success(200);
     } catch (error) {
       this.logger.error(error, 'Error during image upload');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -43,14 +43,14 @@ export class UploadController {
 
       fileStream.on('error', (error) => {
         this.logger.error(error, 'Error streaming file');
-        handleError(res, error);
+        sendHttpErrorResponse(res, error);
       });
 
       // Pipe the file stream to the response
       fileStream.pipe(res);
     } catch (error) {
       this.logger.error(error, 'Error serving image');
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 }

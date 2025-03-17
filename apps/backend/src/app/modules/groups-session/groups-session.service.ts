@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { UserSession } from '../../common/interfaces/user-session.interface';
-import { GroupSession } from '../../common/interfaces/group-session.interface';
 import { MusicPlatform } from '@prisma/client';
 import { createLogger } from '../../common/utils/logger.util';
 import { GroupsSessionCache } from '../cache/services/groups-session-cache.service';
+import { GroupSession, UserSession } from '@frontend/shared';
 
 @Injectable()
 export class GroupsSesionService {

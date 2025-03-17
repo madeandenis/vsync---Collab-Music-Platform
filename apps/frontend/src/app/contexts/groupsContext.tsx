@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchUserGroups } from '../_api/groupsApi';
 import { extractUserId } from '../_utils/userUtils';
 import { Group, UserProfile } from '@frontend/shared';
-import LoadingSpinner from '../_components/LoadingSpinner';
+import Spinner from '../_components/Spinner';
+import LoadingOverlay from '../_components/LoadingOverlay';
 
 interface GroupsContextType {
     groups: Group[] | undefined;
@@ -18,7 +19,7 @@ export const GroupsProvider = ({ profile, children }: { profile: UserProfile, ch
     const userId = extractUserId(profile);
 
     const { data: groups, error, isLoading, refetch: refetchAll } = useQuery({
-        queryKey: [`groups-${userId}`],
+        queryKey: ['groups', userId],
         queryFn: fetchUserGroups,
         enabled: !!userId,
         retry: false,
@@ -28,7 +29,7 @@ export const GroupsProvider = ({ profile, children }: { profile: UserProfile, ch
 
     return (
         <GroupsContext.Provider value={{ groups, error, isLoading, refetchAll }}>
-            {isLoading ? <LoadingSpinner /> : children}
+            {isLoading ? <LoadingOverlay /> : children}
         </GroupsContext.Provider>
     );
 };

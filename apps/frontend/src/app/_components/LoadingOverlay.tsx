@@ -1,5 +1,5 @@
 import { Backdrop } from "./Backdrop";
-import LoadingSpinner from "./LoadingSpinner";
+import Spinner from "./Spinner";
 
 interface LoadingOverlayProps
 {
@@ -9,7 +9,7 @@ interface LoadingOverlayProps
 const LoadingOverlay = ({ opacity }: LoadingOverlayProps) => {
   return (
     <Backdrop opacity={opacity}>
-      <LoadingSpinner />
+      <Spinner />
     </Backdrop>
   );
 };

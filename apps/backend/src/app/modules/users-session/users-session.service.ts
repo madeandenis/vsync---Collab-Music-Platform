@@ -1,8 +1,7 @@
 import { Request } from 'express';
-import { TokenData, UserProfile } from '@frontend/shared';
+import { GuestUserSession, TokenData, UserProfile, UserSession } from '@frontend/shared';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Account, MusicPlatform } from '@prisma/client';
-import { GuestUserSession, UserSession } from '../../common/interfaces/user-session.interface';
 import { createLogger } from '../../common/utils/logger.util';
 
 @Injectable()

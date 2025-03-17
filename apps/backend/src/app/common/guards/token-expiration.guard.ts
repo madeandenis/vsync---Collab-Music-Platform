@@ -1,6 +1,6 @@
+import { UserSession } from '@frontend/shared';
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
-import { UserSession } from '../interfaces/user-session.interface';
 
 @Injectable()
 export class TokenExpirationGuard implements CanActivate {

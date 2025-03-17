@@ -26,7 +26,7 @@ export function respond<T>(res: Response)
     return { success, failure }; 
 }
 
-export function handleError(res: Response, error: unknown)
+export function sendHttpErrorResponse(res: Response, error: unknown)
 {
     if (error instanceof HttpException)
     {
@@ -47,7 +47,7 @@ export function handleError(res: Response, error: unknown)
     )
 }
 
-export function handleWsError(client: Socket, error: unknown)
+export function emitWebSocketError(client: Socket, error: unknown)
 {
     if (error instanceof WsException)
     {
@@ -57,7 +57,7 @@ export function handleWsError(client: Socket, error: unknown)
     {
         client.emit('error', error.message || 'A unknown server error occurred');
     }
-    else (error instanceof Error)
+    else
     {
         client.emit('error', String(error) || 'A unknown error occurred');
     }

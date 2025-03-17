@@ -16,11 +16,11 @@ export default function ProfilePage() {
 
     return (
         <div className="flex flex-col gap-8 w-screen h-screen bg-ytMusicBlack subtle-colorful-bg overflow-hidden">
-            <ProfileHeader opacity={40} />
+            <ProfileHeader/>
             <ProfileCard profile={profile} groupsCount={groupsCount}/>
             <GroupsProvider profile={profile}>
                 <div className="flex-grow overflow-auto mb-12">
-                    <GroupsContainer cardsSize={150} setGroupsCount={setGroupsCount}/>
+                    <GroupsContainer cardsSize={170} setGroupsCount={setGroupsCount}/>
                 </div>
             </GroupsProvider>
         </div>

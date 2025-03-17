@@ -1,9 +1,9 @@
 import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
 import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
-import { handleError, respond } from '../../common/utils/response.util';
+import { sendHttpErrorResponse, respond } from '../../common/utils/response.util';
 import { Request, Response } from 'express';
-import { UserSession } from '../../common/interfaces/user-session.interface';
 import { MusicPlatform } from '@prisma/client';
+import { UserSession } from '@frontend/shared';
 
 @Controller('user-profile')
 export class UsersProfileController {
@@ -21,7 +21,7 @@ export class UsersProfileController {
     }
     catch (error)
     {
-      handleError(res, error)
+      sendHttpErrorResponse(res, error)
     }
   }
 

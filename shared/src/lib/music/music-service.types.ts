@@ -49,16 +49,6 @@ export interface Track {
     platform?: MusicPlatform;
 }
 
-export interface TracksSearchResult {
-    tracks: {
-        href?: string,
-        items: Track[];
-        limit?: number;
-        offset: number;
-        total?: number;
-    };
-}
-
 export interface Playlist {
     id: string;
     name: string;

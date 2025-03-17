@@ -1,13 +1,12 @@
 import { Controller, Get, HttpStatus, Param, ParseUUIDPipe, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { handleError, respond } from '../../common/utils/response.util';
+import { sendHttpErrorResponse, respond } from '../../common/utils/response.util';
 import { GroupsSesionService } from './groups-session.service';
 import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
 import { GroupOwnershipGuard } from '../../common/guards/group-ownership.guard';
-import { UserSession } from '../../common/interfaces/user-session.interface';
-import { GroupSession } from '../../common/interfaces/group-session.interface';
 import { createLogger } from '../../common/utils/logger.util';
 import { GroupsService } from '../groups/groups.service';
+import { GroupSession, UserSession } from '@frontend/shared';
 
 @Controller('groups/:groupId/session')
 @UseGuards(RegisteredUserGuard)
@@ -29,14 +28,14 @@ export class GroupsSesionController {
       await this.groupsSessionService.createGroupSession(groupId, user);
       await this.groupsService.updateGroup(
         groupId,
+        { isActive: true },
         user.userId,
-        { isActive: true }
       )
 
       return respond(res).success(HttpStatus.CREATED);
     } catch (error) {
       this.logger.error(error, 'Start session error')
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -53,7 +52,7 @@ export class GroupsSesionController {
       return respond(res).success(HttpStatus.OK, session);
     } catch (error) {
       this.logger.error(error, 'Status session error')
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 
@@ -66,14 +65,14 @@ export class GroupsSesionController {
       await this.groupsSessionService.endGroupSession(groupId);
       await this.groupsService.updateGroup(
         groupId,
+        { isActive: false },
         user.userId,
-        { isActive: false }
       )
 
       return respond(res).success(HttpStatus.NO_CONTENT);
     } catch (error) {
       this.logger.error(error, 'Stop session error')
-      handleError(res, error);
+      sendHttpErrorResponse(res, error);
     }
   }
 }

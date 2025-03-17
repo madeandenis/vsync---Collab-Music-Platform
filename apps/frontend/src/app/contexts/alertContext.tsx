@@ -10,7 +10,7 @@ type AlertType = AlertProps['type'];
 
 interface AlertContextType {
     alerts: { message: AppAlert; type: AlertType }[]; 
-    setAlert: (message: AppAlert, type: AlertType) => void; 
+    setAlert: (message: AppAlert, type: AlertType, duration?: number) => void; 
     clearAlert: (index: number) => void;
 }
 
@@ -23,11 +23,11 @@ const handleErrorRedirect = (error: AppAlert, router: AppRouterInstance) => {
 };
 
 const renderAlert = (
-    alert: { message: AppAlert; type: AlertType }, 
+    alert: { message: AppAlert; type: AlertType, duration?: number }, 
     index: number, 
     clearAlert: (index: number) => void
 ) => {
-    const { message, type } = alert;
+    const { message, type, duration } = alert;
 
     if (message instanceof FetchError) {
         return (
@@ -36,6 +36,7 @@ const renderAlert = (
                 error={message}
                 errorPayloadOn={true}
                 index={index}
+                duration={duration}
                 onClose={() => clearAlert(index)}
             />
         );
@@ -48,17 +49,18 @@ const renderAlert = (
             type={type} 
             content={{ title: errorMessage }}
             index={index}
+            duration={duration}
             onClose={() => clearAlert(index)}
         />
     );
 };
 
 export const AlertProvider = ({ children }: { children: React.ReactNode }) => {
-    const [alerts, setAlerts] = useState<{ message: AppAlert; type: AlertType }[]>([]);
+    const [alerts, setAlerts] = useState<{ message: AppAlert; type: AlertType; duration?: number }[]>([]);
     const router = useRouter();
 
-    const setAlert = (message: AppAlert, type: AlertType) => {
-        setAlerts((prevAlerts) => [...prevAlerts, { message, type }]);
+    const setAlert = (message: AppAlert, type: AlertType, duration?: number) => {
+        setAlerts((prevAlerts) => [...prevAlerts, { message, type, duration }]);
     };
 
     const clearAlert = (index: number) => {
