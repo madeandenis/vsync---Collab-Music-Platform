@@ -6,10 +6,8 @@ import { GroupOptions } from "../GroupOptions";
 import { fetchGroupSession, startGroupSession, stopGroupSession } from "../../_api/groupsSessionApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useGroupsContext } from "../../contexts/groupsContext";
-import { JSX } from "react";
 import { useRouter } from "next/navigation";
 import { IoMdPeople } from "react-icons/io";
-import { formatDistanceToNow } from 'date-fns';
 import { timeSinceNow } from "../../_utils/timeUtils";
 
 interface GroupCardProps {
@@ -58,6 +56,8 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
 
     // Enforce cache busting 
     const timestamp = new Date().getTime();
+
+    // TODO - Solve versioning mechanism
     const imageUrl = group.imageUrl ? `${group.imageUrl}?v=${timestamp}` : undefined;
 
     const thumbnail = (
@@ -89,7 +89,7 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
 
             {/* Session info overlay */}
             {session && (
-                <div className="absolute bottom-0 left-0 right-0 bg-white/10 py-1 px-2 text-xs text-white/90 font-nunito">
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 px-2 text-xs text-white/90 font-nunito">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
                             <IoMdPeople className="mr-1" />
@@ -106,18 +106,10 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
         </Thumbnail>
     );
 
-    const groupName: string | JSX.Element = group.isActive ?
-        <div>
-            {group.name}
-            <span className="ml-2 text-green-500 text-xl drop-shadow-[0_0_5px_#0f0]">●</span>
-        </div>
-        :
-        group.name
-
     return (
         <ThumbnailCard
             thumbnail={thumbnail}
-            name={groupName}
+            name={group.name}
         />
     )
 }                                               

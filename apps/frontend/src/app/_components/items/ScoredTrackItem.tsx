@@ -2,7 +2,7 @@ import { QueuedTrack, ScoredTrack } from "@frontend/shared";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import TrackItem from "./TrackItem";
-import VoteButton from "../VoteButton";
+import VoteButton from "../buttons/VoteButton";
 import { RiDragMoveFill } from "react-icons/ri";
 
 interface ScoredTrackItemProps 

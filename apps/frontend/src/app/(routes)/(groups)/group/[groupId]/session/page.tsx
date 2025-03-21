@@ -8,6 +8,7 @@ import TrackQueue from "apps/frontend/src/app/_components/lists/TrackQueue";
 import LoadingOverlay from "apps/frontend/src/app/_components/LoadingOverlay";
 import { ProfileHeader } from "apps/frontend/src/app/_components/ProfileHeader";
 import TrackSearchContainer from "apps/frontend/src/app/_components/search_bars/TrackSearchContainer";
+import SpotifyPlayer from "apps/frontend/src/app/_components/player/SpotifyPlayer";
 import useGroupSocket from "apps/frontend/src/app/_hooks/useGroupSocket";
 import { useAlertContext } from "apps/frontend/src/app/contexts/alertContext";
 import { useRouter } from "next/navigation";
@@ -54,15 +55,19 @@ export default function GroupSessionPage({ params }: { params: Promise<{ groupId
     }
 
     return (
-        <div className="flex flex-col gap-6 w-screen h-screen bg-ytMusicBlack subtle-colorful-bg overflow-hidden">
+        <div className="flex flex-col gap-6 w-screen h-screen bg-ytMusicBlack subtle-colorful-bg overflow-y-auto scrollbar">
             {/* Profile Header */}
             <ProfileHeader />
             
             {/* Group Information Card */}
             { group && <GroupInfoCard group={group} />}
+
+            <div className="container mx-auto w-[90%] max-w-lg">
+                <SpotifyPlayer queue={queue}/>
+            </div>
             
             {/* Main Content Container */}
-            <div className="container mx-auto p-6 w-3/4 max-w-3xl rounded-xl bg-white/5">
+            <div className="container mx-auto w-[90%] max-w-lg rounded-xl bg-white/5 p-2 sm:p-6">
                 {/* Track Search Container */}
                 <TrackSearchContainer onTrackAdd={(track: Track) => addTrack(track, 0)}/>
                 

@@ -1,4 +1,4 @@
-import { Provider } from "../_types/provider"
+import { Provider } from "../_types/provider.types"
 
 export default function useAuth(){
     function initAuth(provider: Provider, redirect?: string)

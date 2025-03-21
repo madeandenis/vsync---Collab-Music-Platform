@@ -21,6 +21,12 @@ export class SpotifyService {
   private readonly spotifySearchUrl = 'https://api.spotify.com/v1/search';
   private readonly spotifyPlaylistsUrl = 'https://api.spotify.com/v1/me/playlists';
 
+  private readonly requiredScopes = [
+    'user-read-private',
+    'user-read-email',
+    'streaming' // Web Player SDK
+];
+
   constructor(
     private readonly configService: ConfigService 
   )
@@ -32,15 +38,10 @@ export class SpotifyService {
 
   generateSpotifyAuthorizationUrl(state: string): string 
   {
-    const requiredScopes = [
-        'user-read-private',
-        'user-read-email',
-    ];
-
     const queryParams = new URLSearchParams({
         response_type: 'code',
         client_id: this.clientId,
-        scope: requiredScopes.join(' '),
+        scope: this.requiredScopes.join(' '),
         redirect_uri: this.redirectUri,
         state,
     });

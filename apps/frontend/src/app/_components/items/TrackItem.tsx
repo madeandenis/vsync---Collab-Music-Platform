@@ -2,47 +2,51 @@ import { Track } from "@frontend/shared";
 import { FaPlus } from "react-icons/fa";
 import { formatMs } from "../../_utils/timeUtils";
 import React from "react";
+import TrackInfo from "../TrackInfo";
 
 interface TrackItemProps {
     track: Track;
     onTrackAdd?: (track: Track) => void;
     childrenLeft?: React.ReactNode;
     childrenRight?: React.ReactNode;
+    showDuration ?: boolean;
 }
 
-const TrackItem = ({ track, onTrackAdd, childrenLeft, childrenRight }: TrackItemProps) => {
-    const { name, album, artists, duration_ms } = track;
+const TrackItem = ({ track, onTrackAdd, childrenLeft, childrenRight, showDuration=true }: TrackItemProps) => {
+    
+    const containerWidth = showDuration 
+    ? { left: 70, right: 30 } 
+    : { left: 80, right: 20 };
+
+    // TODO - Select the 64 64 image
 
     return (
-        <div className="py-2 px-3 flex items-center justify-between bg-white/10 text-white/90 rounded-lg font-poppins">
-            <div className="flex items-center">
+        <div className="py-2 px-3 flex items-center justify-between gap-8 bg-white/10 text-white/90 font-poppins rounded-lg ">
+            {/* Left Container */}
+            <div 
+                className="flex items-center"
+                style={{ width: `${containerWidth.left}%` }}
+            >
                 {/* Left Children */}
                 {childrenLeft}
-                {
-                    album && album.imageUrl &&
-                    <img
-                        src={album.imageUrl}
-                        alt={album.name}
-                        className="rounded-lg"
-                        style={{ width: `${50}px`, height: `${50}px` }}
-                    />
-                }
-                <div className="flex flex-col ml-2">
-                    {/* Track Name */}
-                    <h3 className="font-semibold text-md">{name}</h3>
-                    {/* Artists */}
-                    {
-                        artists &&
-                        <p className="text-xs text-white/80">
-                            {artists.map((artist) => artist.name).join(', ')}
-                        </p>
-                    }
-                </div>
+                
+                <TrackInfo track={track} imageSize={50}/>
+                
             </div>
 
-            <div className="flex justify-center items-center gap-4">
+            {/* Right Container */}
+            <div 
+                className="flex justify-between items-center"
+                style={{ width: `${containerWidth.right }%` }}
+            >
+                {/* Push add button to the right */}
+                <div></div>
+
                 {/* Track duration */}
-                <p className="text-sm">{duration_ms && formatMs(duration_ms)}</p>
+                {
+                    showDuration && track.duration_ms && 
+                    <p className="text-sm">{formatMs(track.duration_ms)}</p>
+                }
 
                 {/* Add button */}
                 {

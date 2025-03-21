@@ -1,10 +1,10 @@
 import { Response, Request } from 'express';
-import { Controller, Get, Res, Req, Query, HttpStatus, UseGuards, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Res, Req, Query, HttpStatus, UseGuards, UnauthorizedException, NotFoundException, Post } from '@nestjs/common';
 import { SpotifyService } from './spotify.service';
 import { generateRandomString } from '../../../common/utils/crypto.util';
 import { sendHttpErrorResponse, respond } from '../../../common/utils/response.util';
 import { createLogger } from '../../../common/utils/logger.util';
-import { isGuestUserSession, TokenData, UserProfile, UserSession } from '@frontend/shared';
+import { GuestUserSession, isGuestUserSession, TokenData, UserProfile, UserSession } from '@frontend/shared';
 import { AuthService } from '../../auth/auth.service';
 import { MusicPlatform } from '@prisma/client';
 import { isValidUrl, splitUrl } from '../../../common/utils/url.util';
@@ -15,6 +15,7 @@ import { SpotifyUserGuard } from '../../../common/guards/spotify-user.guard';
 import { UsersSessionService } from '../../users-session/users-session.service';
 import { TokenExpirationGuard } from '../../../common/guards/token-expiration.guard';
 import { ConfigService } from '@nestjs/config';
+import { report } from 'process';
 
 @Controller('spotify')
 export class SpotifyController {
@@ -75,7 +76,7 @@ export class SpotifyController {
       } = req.query;
 
       if (typeof requestState !== 'string' || typeof authCode !== 'string') {
-        return respond(res).failure(HttpStatus.BAD_REQUEST, 'Invalid query parameters');
+        return this.handleFailedAuthentication(res, 'Invalid query parameters');
       }
 
       const sessionState = req.session.state; 
@@ -105,7 +106,7 @@ export class SpotifyController {
       .then(() => {
         this.redirectTo(res, sessionState)
       })
-      .catch((error) => this.handleFailedAuthentication(res, error))
+      .catch((error) => this.handleFailedAuthentication(res, error, false))
     }
     catch (error)
     {
@@ -115,8 +116,41 @@ export class SpotifyController {
   }
 
   @UseGuards(RegisteredUserGuard, SpotifyUserGuard)
-  @Get('refresh-token')
+  @Get('access-token')
   async refreshToken(@Res() res: Response, @Req() req: Request)
+  {
+    try
+    {
+      const session: UserSession | GuestUserSession = req.session.user;
+
+      if(isGuestUserSession(session)){
+        throw new UnauthorizedException('You are not authorized to access this resource. Please log in.');
+      }
+      const { accessToken, expiresAt } = session.token;
+
+      if (!accessToken || !expiresAt) {
+        throw new UnauthorizedException('Invalid session token. Please reauthenticate.');
+      }
+
+      const expiresAtDate = new Date(session.token.expiresAt);
+      const now = new Date();
+  
+      if (expiresAtDate <= now) {
+        throw new UnauthorizedException('Token has expired. Please refresh token.');
+      }
+  
+      return respond(res).success(HttpStatus.OK, accessToken);
+    }
+    catch(error)
+    {
+      this.logger.error(error, 'Error during Token refresh');
+      sendHttpErrorResponse(res, error);
+    }
+  }
+
+  @UseGuards(RegisteredUserGuard, SpotifyUserGuard)
+  @Post('refresh/access-token')
+  async refreshAccessToken(@Res() res: Response, @Req() req: Request)
   {
     try
     {
@@ -238,17 +272,24 @@ export class SpotifyController {
     return res.redirect(`${this.clientBaseUrl}/home`);
   }
 
-  private handleFailedAuthentication(res: Response, error: unknown)
+  private handleFailedAuthentication(res: Response, error: unknown, reportError = true)
   {
     let errorMessage = 'Authentication failed'
 
-    if(typeof error === 'string')
-    {
-      errorMessage = error;
-    }
-
-    this.logger.error(error, errorMessage);
-    return res.redirect(`${this.clientBaseUrl}/login?err=${encodeURI('Authentication failed')}`);
+    if (reportError) { 
+      if (error instanceof Error) {
+          errorMessage = error.message;
+      } else if (typeof error === 'string') {
+          errorMessage = error;
+      } else {
+          errorMessage = 'Unknown authentication error';
+      }
+  }
+    
+    const redirectUrl = `${this.clientBaseUrl}/login?err=${encodeURIComponent(errorMessage)}`;
+    this.logger.error(`Redirecting to: ${redirectUrl}`); 
+    
+    return res.redirect(redirectUrl);
   }
  
 }

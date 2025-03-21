@@ -1,6 +1,5 @@
 import { GroupCard } from "./cards/GroupCard";
 import { CreateGroupCard } from "./cards/CreateGroupCard";
-import { UserProfile } from "@frontend/shared";
 import { useGroupsContext } from "../contexts/groupsContext";
 import { Dispatch, SetStateAction, useEffect } from "react";
 
@@ -19,9 +18,8 @@ export const GroupsContainer = ({cardsSize, setGroupsCount}: GroupsContainerProp
     }, [groups, setGroupsCount])
 
     return (
-        <div className="container mx-auto p-8 h-full w-3/4 max-w-3xl bg-white/5 rounded-xl">
-            <h2 className="text-2xl text-white/95 font-poppins font-semibold mb-2">Your Groups</h2>
-            <div className="flex flex-wrap gap-2 w-full h-[calc(100%-10px)] overflow-y-auto scrollbar">
+        <div className="container mx-auto w-[90%] max-w-lg rounded-xl bg-white/5 p-6 font-poppins">
+            <div className="flex flex-wrap items-center justify-center gap-2 overflow-y-auto scrollbar">
                 <CreateGroupCard size={cardsSize}/>
                 {
                     groups && groups.length > 0 && groups.map(group => (

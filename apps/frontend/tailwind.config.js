@@ -12,6 +12,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        'sm': '500px', 
+      },
       colors: {
         graphite: '#282828',
         charcoalBlack: '#101010',

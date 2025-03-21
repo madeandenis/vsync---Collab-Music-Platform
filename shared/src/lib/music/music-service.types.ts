@@ -22,7 +22,7 @@ export interface UserProfile {
         width?: number;
     }>;
     platform: MusicPlatform;
-    product?: string;
+    product?: 'premium' | 'free' | 'open' | string;
     external_urls?: {
         spotify?: string;
         youtubemusic?: string;

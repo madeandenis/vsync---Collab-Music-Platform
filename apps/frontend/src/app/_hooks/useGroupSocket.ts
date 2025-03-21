@@ -2,14 +2,14 @@ import { GroupSession, QueuedTrack, ScoredTrack, Track } from "@frontend/shared"
 import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-interface UseGroupSocketProps {
+interface GroupSocketHook {
     groupId: string;
     onDisconnect: () => void;
     onConnectionError: (error: string) => void;
     onSocketError: (error: string) => void;
 }
 
-const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketError }: UseGroupSocketProps) => {
+const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketError }: GroupSocketHook) => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [socketError, setSocketError] = useState<string | null>(null);
     const [connectionError, setConnectionError] = useState<string | null>(null);

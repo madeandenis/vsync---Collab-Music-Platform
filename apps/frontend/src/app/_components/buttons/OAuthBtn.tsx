@@ -3,8 +3,8 @@
 import React from "react";
 import { FaSpotify } from 'react-icons/fa';
 import { SiYoutubemusic } from 'react-icons/si';
-import { Provider } from "../_types/provider";
-import useAuth from "../_hooks/useAuth";
+import useAuth from "../../_hooks/useAuth";
+import { Provider } from "../../_types/provider.types";
 
 interface OAuthBtnProps
 {

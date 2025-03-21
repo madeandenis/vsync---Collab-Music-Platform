@@ -15,14 +15,16 @@ export default function ProfilePage() {
     if (!profile) return <LoadingOverlay />
 
     return (
-        <div className="flex flex-col gap-8 w-screen h-screen bg-ytMusicBlack subtle-colorful-bg overflow-hidden">
+        <div className="flex flex-col w-screen h-screen bg-ytMusicBlack subtle-colorful-bg overflow-hidden">
             <ProfileHeader/>
-            <ProfileCard profile={profile} groupsCount={groupsCount}/>
-            <GroupsProvider profile={profile}>
-                <div className="flex-grow overflow-auto mb-12">
-                    <GroupsContainer cardsSize={170} setGroupsCount={setGroupsCount}/>
-                </div>
-            </GroupsProvider>
+            <div className="flex flex-col gap-6 overflow-y-auto scrollbar">
+                {/* For scrollbar to appear from top */}
+                <div></div> 
+                <ProfileCard profile={profile} groupsCount={groupsCount}/>
+                <GroupsProvider profile={profile}>
+                    <GroupsContainer cardsSize={180} setGroupsCount={setGroupsCount}/>
+                </GroupsProvider>
+            </div>
         </div>
     );
 }

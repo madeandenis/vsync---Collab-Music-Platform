@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchUserGroups } from '../_api/groupsApi';
 import { extractUserId } from '../_utils/userUtils';
 import { Group, UserProfile } from '@frontend/shared';
-import Spinner from '../_components/Spinner';
 import LoadingOverlay from '../_components/LoadingOverlay';
 
 interface GroupsContextType {

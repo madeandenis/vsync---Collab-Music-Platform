@@ -54,14 +54,14 @@ export const GroupOptions = ({ buttonSize, group }: GroupOptionsProps) => {
         <div
             ref={groupOptionsRef}
             className={
-                `p-2 flex flex-col items-center rounded-full
+                `p-1 flex flex-col items-center rounded-full
                     ${openList
                     ? 'bg-black/90 hover:bg-black/90 rounded-xl'
-                    : 'bg-white/15 hover:bg-white/30'
+                    : 'bg-transparent'
                 }
                 transition-all ease-in-out`
             }>
-            <FaEllipsisH size={buttonSize} className='text-white' onClick={() => toggleOpenList()} />
+            <FaEllipsisH size={buttonSize} className='text-white/80' onClick={() => toggleOpenList()} />
             {openList && <OptionsList options={options} hideLabels={true} />}
             {openEditForm && <EditGroupForm setOpen={setEditOpenForm} group={group} />}
             {openDeleteForm && <DeleteGroupForm setOpen={setDeleteOpenForm} group={group}/>}

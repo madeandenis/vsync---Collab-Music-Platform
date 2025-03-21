@@ -8,7 +8,7 @@ interface ItemListProps<T> {
 
 function ItemList<T> ({ items, renderItem, getId }: ItemListProps<T>) {
   return (
-    <div className={`space-y-2 max-h-[40vh] overflow-y-auto scrollbar`}>
+    <div className={`space-y-2 max-h-[60vh] overflow-y-auto scrollbar`}>
       {items.map((item) => (
         <div key={getId(item)}>
           {renderItem(item)}

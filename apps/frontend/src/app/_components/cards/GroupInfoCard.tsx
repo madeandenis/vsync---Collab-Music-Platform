@@ -7,8 +7,8 @@ import { platformIcon } from '../../_utils/iconUtils';
 
 const GroupInfoCard = ({ group }: { group: Group }) => {
     return (
-        <div className="container mx-auto p-6 w-3/4 max-w-3xl rounded-xl bg-white/5">
-            <div className="flex items-top space-x-6">
+        <div className="container mx-auto w-[90%] max-w-lg rounded-xl bg-white/5 p-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
                 {/* Group Thumbnail */}
                 <Avatar
                     src={group.imageUrl ?? undefined}
@@ -18,10 +18,12 @@ const GroupInfoCard = ({ group }: { group: Group }) => {
                 />
                 {/* Group Info */}
                 <div className='flex flex-col gap-y-2'>
-                    <h1 className="text-sm text-white text-opacity-80 font-poppins">Group</h1>
-                    <h1 className="text-4xl text-white font-extrabold font-poppins">{group.name}</h1>
-                    <p className="text-sm text-white text-opacity-60 font-poppins">{group.description || 'No description available'}</p>
-                    <div className='flex gap-4 items-center font-poppins'>
+                    <h1 className="text-3xl text-white font-extrabold font-poppins break-words">{group.name}</h1>
+                    {
+                        group.description && 
+                        <p className="text-xs text-white text-opacity-60 font-poppins break-words">{group.description}</p>
+                    }
+                    <div className='flex flex-wrap gap-x-4 gap-y-2 items-center font-poppins'>
                         <span className="flex items-center gap-1">
                             {group.isPublic ? (
                                 <>

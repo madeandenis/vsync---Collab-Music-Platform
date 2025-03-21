@@ -9,16 +9,14 @@ import { Track } from "@frontend/shared";
 export default function TrackSearchContainer({ onTrackAdd }: { onTrackAdd: (track: Track) => void }) {
     const [searchQuery, setSearchQuery] = useState<string | null>(null);
     const [lastSearchedQuery, setLastSearchedQuery] = useState<string | null>(null); 
-    const searchBarRef = useRef<{ clearInput: () => void } | null>(null);
 
     const handleOnTrackAdd = (track: Track) => {
         onTrackAdd(track);
-        searchBarRef.current?.clearInput();  
     }
 
     const getTrackId = (item: Track) => item.id;
     const renderTrackItem = (track: Track) => {
-        return <TrackItem key={track.id} track={track} onTrackAdd={handleOnTrackAdd}/>;
+        return <TrackItem key={track.id} track={track} onTrackAdd={handleOnTrackAdd} showDuration={false}/>;
     };
 
     const { data: tracks, isLoading, refetch } = useQuery({
@@ -39,7 +37,6 @@ export default function TrackSearchContainer({ onTrackAdd }: { onTrackAdd: (trac
     return (
         <div>
             <SearchBar
-                ref={searchBarRef}
                 onSearchQueryChange={setSearchQuery}
                 onSearchTrigger={handleSearchTrigger}
                 isLoading={isLoading}

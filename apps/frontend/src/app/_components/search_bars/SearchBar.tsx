@@ -1,5 +1,6 @@
-import { Dispatch, forwardRef, SetStateAction, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { IoIosSearch } from "react-icons/io";
+import { TiDelete } from "react-icons/ti";
 import Spinner from "../Spinner";
 
 interface SearchBarProps {
@@ -10,7 +11,7 @@ interface SearchBarProps {
     placeholderText?: string;
 }
 
-const SearchBar = forwardRef(({ onSearchQueryChange, onSearchTrigger, isLoading, placeholderText }: SearchBarProps, ref) => {
+const SearchBar = ({ onSearchQueryChange, onSearchTrigger, isLoading, placeholderText }: SearchBarProps) => {
     const [inputValue, setInputValue] = useState<string>("");
 
     useEffect(() => {
@@ -33,12 +34,6 @@ const SearchBar = forwardRef(({ onSearchQueryChange, onSearchTrigger, isLoading,
         onSearchQueryChange(null);
     };
 
-    // Expose `clearInput` to parent
-    useImperativeHandle(ref, () => ({
-        clearInput,
-    }));
-
-
     return (
         <div className="flex justify-center items-center rounded-lg bg-white/10">
             <input
@@ -56,13 +51,21 @@ const SearchBar = forwardRef(({ onSearchQueryChange, onSearchTrigger, isLoading,
                 className="p-2 m-1"
             >
                 {
-                    isLoading ?
-                    <Spinner size={22} /> :
-                    <IoIosSearch size={22} className="text-white/80 hover:text-white" />
+                    isLoading ? (
+                        <Spinner size={22} />
+                    ) : inputValue === "" ? (
+                        <IoIosSearch size={22} className="text-white/80 hover:text-white" />
+                    ) : (
+                        <TiDelete
+                            size={26}
+                            className="text-white/80 hover:text-white"
+                            onClick={() => clearInput()}
+                        />
+                    )
                 }
             </button>
         </div>
     )
-});
+};
 
 export default SearchBar;
