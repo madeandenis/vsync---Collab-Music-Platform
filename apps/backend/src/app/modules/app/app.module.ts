@@ -8,7 +8,7 @@ import { AuthModule } from '../auth/auth.module';
 import { RedisModule, RedisModuleOptions } from '@nestjs-modules/ioredis';
 import { WebsocketsModule } from '../gateways/websockets.module';
 import { GroupsModule } from '../groups/groups.module';
-import { GroupsSesionModule } from '../groups-session/groups-session.module';
+import { GroupsSessionModule } from '../groups-session/groups-session.module';
 import { UsersModule } from '../users/users.module';
 import { UsersProfileModule } from '../users-profile/users-profile.module';
 import { UsersSessionModule } from '../users-session/users-session.module';
@@ -22,7 +22,7 @@ import { UploadModule } from '../upload/upload.module';
     AuthModule,
     WebsocketsModule,
     GroupsModule,
-    GroupsSesionModule,
+    GroupsSessionModule,
     UsersModule,
     UsersSessionModule,
     UsersProfileModule,

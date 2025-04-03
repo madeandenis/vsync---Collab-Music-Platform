@@ -16,7 +16,7 @@ export const CreateGroupCard = ({ size }: CreateGroupCardProps) => {
 
     const thumbnail = <Thumbnail 
         src={undefined}
-        placeHolder={<FaPlus size={size/4} />}
+        placeHolder={<FaPlus size={size/5} />}
         alt={'create-group-thumbnail'}
         size={size}
     />

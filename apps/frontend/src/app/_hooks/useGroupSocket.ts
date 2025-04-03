@@ -1,4 +1,4 @@
-import { GroupSession, QueuedTrack, ScoredTrack, Track } from "@frontend/shared";
+import { Events, GroupSession, QueuedTrack, ScoredTrack, Track } from "@frontend/shared";
 import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -13,8 +13,8 @@ const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketErro
     const [socket, setSocket] = useState<Socket | null>(null);
     const [socketError, setSocketError] = useState<string | null>(null);
     const [connectionError, setConnectionError] = useState<string | null>(null);
-    const [queue, setQueueState] = useState<ScoredTrack[] | null>(null);
     const [session, setSession] = useState<GroupSession | null>(null);
+    const [queue, setQueueState] = useState<ScoredTrack[]>([]);
 
     useEffect(() => {
         if (!groupId || connectionError) return;
@@ -27,25 +27,26 @@ const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketErro
 
         setSocket(newSocket);
 
-        newSocket.on("disconnect", () => {
+        newSocket.on(Events.Socket.Disconnect, () => {
             onDisconnect()
         });
 
-        newSocket.on("error", (error: string) => {
+        newSocket.on(Events.Socket.Error, (error: string) => {
             setSocketError(error);
             onSocketError(error);
         });
     
-        newSocket.on("connect_error", (error) => {
+        newSocket.on(Events.Socket.ConnectError, (error) => {
             const errorMessage = error.message || "Failed to connect to server";
             setConnectionError(errorMessage);
             onConnectionError(errorMessage);
         });
 
-        newSocket.on("group_queue", (queue: ScoredTrack[]) => {
+        newSocket.on(Events.Group.Queue, (queue: ScoredTrack[]) => {
+            console.log('Received queue update:', queue);
             setQueueState(queue);
         });
-        newSocket.on("group_session", (session: GroupSession) => {
+        newSocket.on(Events.Group.Session, (session: GroupSession) => {
             setSession(session);
         });
 
@@ -62,28 +63,40 @@ const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketErro
     const setQueue = useCallback((updatedQueue: ScoredTrack[]) => {
         setQueueState(updatedQueue);
         if (socket) {
-            socket.emit("group_queue_updated", updatedQueue);
+            socket.emit(Events.Group.UpdateQueue, updatedQueue);
         }
     }, [socket]);
 
     const addTrack = useCallback((track: Track, score: number) => {
         if (socket) {
-            socket.emit("add_track", { track, score });
+            socket.emit(Events.Track.Add, { track, score });
         }
     }, [socket])
 
     const upvoteTrack = useCallback((queuedTrack: QueuedTrack) => {
         if (socket) {
-            socket.emit("upvote_track", { queuedTrack });
+            socket.emit(Events.Track.UpVote, queuedTrack);
         }
     }, [socket]);
     const downvoteTrack = useCallback((queuedTrack: QueuedTrack) => {
         if (socket) {
-            socket.emit("downvote_track", { queuedTrack });
+            socket.emit(Events.Track.DownVote, queuedTrack);
+        }
+    }, [socket]);
+    
+    const withdrawTrack = useCallback((queuedTrack: QueuedTrack) => {
+        if (socket) {
+            socket.emit(Events.Track.WithdrawVote, queuedTrack);
         }
     }, [socket]);
 
-    return { socketError, connectionError, queue, setQueue, addTrack, upvoteTrack, downvoteTrack, session };
+    const removeTrack = useCallback((queuedTrack: QueuedTrack) => {
+        if (socket) {
+            socket.emit(Events.Track.Remove, queuedTrack);
+        }
+    }, [socket]);
+
+    return { socketError, connectionError, queue, session, setQueue, addTrack, upvoteTrack, downvoteTrack, withdrawTrack, removeTrack };
 
 }
 

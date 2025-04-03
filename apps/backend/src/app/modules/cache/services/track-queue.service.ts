@@ -69,11 +69,17 @@ export class TrackQueueService extends CacheService<unknown>
     async voteTrack(groupId: string, queuedTrack: QueuedTrack, voteWeight: number): Promise<void>
     {
         const serializedTrack = JSON.stringify(queuedTrack); 
-        await this.client.zincrby(
-            this.key(groupId),
-            voteWeight,
-            serializedTrack
-        );
+        const key = this.key(groupId);
+        
+        // First check if the track exists
+        const exists = await this.client.zrank(key, serializedTrack);
+        if (exists === null) {
+            // If track doesn't exist, add it with the vote weight
+            await this.client.zadd(key, voteWeight, serializedTrack);
+        } else {
+            // If track exists, increment its score
+            await this.client.zincrby(key, voteWeight, serializedTrack);
+        }
     }
 
 }

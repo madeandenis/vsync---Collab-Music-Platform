@@ -3,16 +3,20 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import TrackItem from "./TrackItem";
 import VoteButton from "../buttons/VoteButton";
-import { RiDragMoveFill } from "react-icons/ri";
+import { RxDragHandleDots2 } from "react-icons/rx";
+import { TrackOptions } from "../options/TrackOptions";
 
 interface ScoredTrackItemProps 
 {
     scoredTrack: ScoredTrack;    
+    onPlay: (trackId: string) => void;
     onDownvote: (track: QueuedTrack) => void;
     onUpvote: (track: QueuedTrack) => void;
+    onWithdrawVote: (track: QueuedTrack) => void;
+    removeTrack: (track: QueuedTrack) => void;
 }
 
-const ScoredTrackItem = ({ scoredTrack, onUpvote, onDownvote }: ScoredTrackItemProps) => {
+const ScoredTrackItem = ({ scoredTrack, onPlay, onUpvote, onDownvote, onWithdrawVote, removeTrack }: ScoredTrackItemProps) => {
     const { queuedTrack, score } = scoredTrack;
     const { trackDetails } = queuedTrack;
 
@@ -26,20 +30,27 @@ const ScoredTrackItem = ({ scoredTrack, onUpvote, onDownvote }: ScoredTrackItemP
     };
 
     const leftComponent = ( 
-        <div className="-ml-1 mr-2 text-white/75">
-            <RiDragMoveFill
+        <div>
+            <RxDragHandleDots2 
                 size={26} 
                 {...listeners}
-                style={{ cursor: "grab" }}
+                className="mr-1 text-white/70 cursor-grab"
             />
         </div>
     );
     const rightComponent = (
-        <VoteButton 
-            onUpvote={() => onUpvote(queuedTrack)} 
-            onDownvote={() => onDownvote(queuedTrack)} 
-            voteCount={score}
-        />
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-1">
+            <VoteButton 
+                onUpvote={() => onUpvote(queuedTrack)} 
+                onDownvote={() => onDownvote(queuedTrack)} 
+                onWithdrawVote={() => onWithdrawVote(queuedTrack)}
+                voteCount={score}
+            />
+            <TrackOptions 
+                buttonSize={20}
+                removeTrack={() => removeTrack(queuedTrack)}
+            />
+        </div>
     );
 
     return (
@@ -47,9 +58,11 @@ const ScoredTrackItem = ({ scoredTrack, onUpvote, onDownvote }: ScoredTrackItemP
             ref={setNodeRef}
             style={style}
             {...attributes}
+            className="cursor-default"
         >
             <TrackItem 
                 track={trackDetails}
+                onPlay={onPlay}
                 childrenLeft={leftComponent}
                 childrenRight={rightComponent}
             />

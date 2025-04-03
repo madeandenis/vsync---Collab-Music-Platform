@@ -31,6 +31,11 @@ export class WsGroupSessionService
         })
     }
 
+    removeTrackVote(groupSession: GroupSession, voterId: string, trackId: string)
+    {
+        groupSession.votingHistory = groupSession.votingHistory.filter(vote => !(vote.trackId === trackId && vote.voterId === voterId));
+    }
+
     addClientToSession(groupSession: GroupSession, socket: AuthSocket)
     {
         const clientSessionID = socket.data.sessionID;

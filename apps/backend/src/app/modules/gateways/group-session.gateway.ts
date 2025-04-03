@@ -6,15 +6,9 @@ import { WsGroupSessionService } from './group-session-ws.service';
 import { TrackQueueService } from '../cache/services/track-queue.service';
 import { emitWebSocketError } from '../../common/utils/response.util';
 import { createLogger } from '../../common/utils/logger.util';
-import { GuestUserSession, QueuedTrack, ScoredTrack, Track, UserSession, Vote } from '@frontend/shared';
+import { Events, GroupSession, GuestUserSession, QueuedTrack, ScoredTrack, Track, UserSession, Vote } from '@frontend/shared';
 import { WsSessionMiddleware } from '../../common/middlewares/ws-session.middleware';
 import { WsLoggingMiddleware } from '../../common/middlewares/ws-log.middleware';
-
-enum Events {
-    GroupQueue = 'group_queue',
-    GroupSession = 'group_session',
-    GroupQueueUpdated = 'group_queue_updated',
-}
 
 @WebSocketGateway({
     cors: { origin: '*' },
@@ -60,8 +54,8 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
 
             socket.join(groupId);
 
-            this.emitToClient(Events.GroupQueue, tracks);
-            this.emitToGroup(groupId, Events.GroupSession, groupSession); // Emmit to notify all members about the addition of a new member
+            this.emitToClient(Events.Group.Queue, tracks);
+            this.emitToGroup(groupId, Events.Group.Session, groupSession); // Emmit to notify all members about the addition of a new member
 
         } catch (error) {
             this.handleWebSocketError(socket, error, 'Error during WebSocket connection');
@@ -71,7 +65,7 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
     async handleDisconnect(socket: AuthSocket) {
         try {
             const groupId = this.getGroupId(socket);
-            let groupSession = await this.groupsSessionCache.get(groupId);
+            const groupSession = await this.groupsSessionCache.get(groupId);
 
             if (!groupSession) {
                 return;
@@ -80,7 +74,7 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
             const removed = this.groupSessionService.removeMemberFromSession(groupSession, socket);
             if (removed) {
                 await this.groupsSessionCache.set(groupId, groupSession);
-                this.emitToGroup(groupId, Events.GroupSession, groupSession);
+                this.emitToGroup(groupId, Events.Group.Session, groupSession);
             }
 
             socket.leave(groupId);
@@ -91,7 +85,34 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
 
     }
 
-    @SubscribeMessage('add_track')
+    @SubscribeMessage(Events.Group.UpdateQueue)
+    async handleUpdateGroupQueue(socket: AuthSocket, queue: ScoredTrack[])
+    {
+        try
+        {
+            if (!queue) {
+                throw new WsException('Missing queue data in the request');
+            }
+
+            const groupId = this.getGroupId(socket);
+            await this.getGroupSession(groupId);
+
+            console.log('Queue updated', queue);
+
+            this.adjustTrackScores(queue);
+
+            await this.trackQueueService.updateQueue(groupId, queue);
+            
+            const updatedQueue: ScoredTrack[] = await this.trackQueueService.getQueue(groupId);
+            
+            this.emitToGroup(groupId, Events.Group.Queue, updatedQueue);
+        }
+        catch (error) {
+            this.handleWebSocketError(socket, error, 'Error handling track voting request');
+        }
+    }
+
+    @SubscribeMessage(Events.Track.Add)
     async handleAddTrack(socket: AuthSocket, payload: { track: Track, score: number }) {
         try {
             const { track, score } = payload;
@@ -119,49 +140,44 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
             await this.trackQueueService.addTrack(groupId, scoredTrack);
 
             const updatedQueue = [...currentQueue, scoredTrack];
-            this.emitToGroup(groupId, Events.GroupQueue, updatedQueue);
+            this.emitToGroup(groupId, Events.Group.Queue, updatedQueue);
         }
         catch (error) {
             this.handleWebSocketError(socket, error, 'Error handling track addition request');
         }
     }
 
-    @SubscribeMessage(Events.GroupQueueUpdated)
-    async handleUpdatedGroupQueue(socket: AuthSocket, queue: ScoredTrack[])
-    {
-        try
-        {
-            if (!queue) {
-                throw new WsException('Missing queue data in the request');
-            }
-
-            const groupId = this.getGroupId(socket);
-            await this.getGroupSession(groupId);
-
-            this.adjustTrackScores(queue);
-
-            await this.trackQueueService.updateQueue(groupId, queue);
-            
-            const updatedQueue: ScoredTrack[] = await this.trackQueueService.getQueue(groupId);
-            
-            this.emitToGroup(groupId, Events.GroupQueue, updatedQueue);
+    @SubscribeMessage(Events.Track.Remove)
+    async handleRemoveTrack(socket: AuthSocket, queuedTrack: QueuedTrack) {
+        if (!queuedTrack) {
+            throw new WsException('Missing queuedTrack data in the request');
         }
-        catch (error) {
-            this.handleWebSocketError(socket, error, 'Error handling track voting request');
-        }
+
+        const groupId = this.getGroupId(socket);
+        await this.getGroupSession(groupId); 
+
+        await this.trackQueueService.removeTrack(groupId, queuedTrack);
+        const updatedQueue: ScoredTrack[] = await this.trackQueueService.getQueue(groupId);
+
+        this.emitToGroup(groupId, Events.Group.Queue, updatedQueue);
     }
 
-    @SubscribeMessage('upvote_track')
-    async handleUpvoteTrack(socket: AuthSocket, payload: { queuedTrack: QueuedTrack }) {
-        this.voteTrack(socket, payload.queuedTrack, 1);
+    @SubscribeMessage(Events.Track.UpVote)
+    async handleUpvoteTrack(socket: AuthSocket, queuedTrack: QueuedTrack ) {
+        this.handleVoteAction(socket, queuedTrack, 'upvote');
     }
 
-    @SubscribeMessage('downvote_track')
-    async handleDownvoteTrack(socket: AuthSocket, payload: { queuedTrack: QueuedTrack }) {
-        this.voteTrack(socket, payload.queuedTrack, -1);
+    @SubscribeMessage(Events.Track.DownVote)
+    async handleDownvoteTrack(socket: AuthSocket, queuedTrack: QueuedTrack) {
+        this.handleVoteAction(socket, queuedTrack, 'downvote');
     }
 
-    private async voteTrack(socket: AuthSocket, queuedTrack: QueuedTrack, voteWeight: number) {
+    @SubscribeMessage(Events.Track.WithdrawVote)
+    async handleWithdrawVote(socket: AuthSocket, queuedTrack: QueuedTrack) {
+        await this.handleVoteAction(socket, queuedTrack, 'withdraw');
+    }
+
+    private async handleVoteAction(socket: AuthSocket, queuedTrack: QueuedTrack, action: 'upvote' | 'downvote' | 'withdraw') {
         try {
             
             if (!queuedTrack) {
@@ -170,40 +186,83 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
 
             const groupId = this.getGroupId(socket);
             const groupSession = await this.getGroupSession(groupId);
-
             const voterId = socket.data.sessionID;
             const trackId = queuedTrack.trackDetails.id;
-            const vote: Vote = this.groupSessionService.findVote(groupSession, voterId, trackId);
 
-            if(vote)
+            const existingVote: Vote = this.groupSessionService.findVote(groupSession, voterId, trackId);
+
+            if (action === 'withdraw')
             {
-                // Vote is same as before
-                if(voteWeight === vote.weight) return;
-
-                this.trackQueueService.voteTrack(groupId, queuedTrack, voteWeight - vote.weight); // withdraw last vote & apply new vote
-
-                this.groupSessionService.updateVoteWeight(groupSession, voterId, trackId, voteWeight);
+                this.withdrawVote(
+                    groupSession,
+                    groupId,
+                    queuedTrack,
+                    existingVote
+                );
             }
-            else
+            else 
             {
-                this.trackQueueService.voteTrack(groupId, queuedTrack, voteWeight); // apply new vote
-                this.groupSessionService.recordTrackVote(groupSession, voterId, trackId, voteWeight);
+                this.upvoteOrDownvote(
+                    groupSession,
+                    groupId,
+                    queuedTrack,
+                    voterId, trackId,
+                    action,
+                    existingVote
+                );
             }
 
             await this.groupsSessionCache.set(groupId, groupSession);
             const updatedQueue: ScoredTrack[] = await this.trackQueueService.getQueue(groupId);
             
-            this.emitToGroup(groupId, 'Events', groupSession);
-            this.emitToGroup(groupId, Events.GroupQueue, updatedQueue);
+            this.emitToGroup(groupId, Events.Group.Session, groupSession);
+            this.emitToGroup(groupId, Events.Group.Queue, updatedQueue);
         }
         catch (error) {
             this.handleWebSocketError(socket, error, 'Error handling track voting request');
         }
     }
 
+    private withdrawVote(
+        groupSession: GroupSession,
+        groupId: string,
+        queuedTrack: QueuedTrack,
+        existingVote?: Vote,
+    ) {
+        
+        if (!existingVote) return; // No vote to withdraw
+    
+        this.trackQueueService.voteTrack(groupId, queuedTrack, -existingVote.weight);
+        this.groupSessionService.removeTrackVote(groupSession, existingVote.voterId, existingVote.trackId);
+    }
+    
+    private upvoteOrDownvote(
+        groupSession: GroupSession,
+        groupId: string,
+        queuedTrack: QueuedTrack,
+        voterId: string,
+        trackId: string,
+        action: 'upvote' | 'downvote',
+        existingVote?: Vote,
+    ) {
+        const voteWeight = action === 'upvote' ? 1 : -1;
+    
+        if (existingVote) {
+            if (existingVote.weight === voteWeight) return; // No change needed
+    
+            // Remove previous vote weight & apply new vote (updates the vote history)
+            this.trackQueueService.voteTrack(groupId, queuedTrack, voteWeight - existingVote.weight);
+            this.groupSessionService.updateVoteWeight(groupSession, voterId, trackId, voteWeight);
+        } else {
+            // New vote
+            this.trackQueueService.voteTrack(groupId, queuedTrack, voteWeight);
+            this.groupSessionService.recordTrackVote(groupSession, voterId, trackId, voteWeight);
+        }
+    }
+
     private adjustTrackScores(queue: ScoredTrack[]) {
         for (let i = queue.length - 1; i > 0; i--) {
-            if (queue[i - 1].score < queue[i].score) {
+            if (queue[i - 1].score <= queue[i].score) {
                 queue[i - 1].score = queue[i].score + 1;
             }
         }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProfileCard from "../../../_components/cards/ProfileCard";
 import { GroupsContainer } from "../../../_components/GroupsContainer";
 import LoadingOverlay from "../../../_components/LoadingOverlay";
@@ -11,7 +11,17 @@ import { useUserContext } from "../../../contexts/userContext";
 export default function ProfilePage() {
     const [groupsCount, setGroupsCount] = useState(0);
     const { profile } = useUserContext();
+    const [cardSize, setCardSize] = useState(170); 
 
+    useEffect(() => {
+        const updateCardSize = () => {
+            setCardSize(Math.min(window.innerWidth * 0.4, 180)); 
+        };
+
+        updateCardSize(); 
+        window.addEventListener("resize", updateCardSize);
+        return () => window.removeEventListener("resize", updateCardSize);
+    }, []);
     if (!profile) return <LoadingOverlay />
 
     return (
@@ -22,7 +32,7 @@ export default function ProfilePage() {
                 <div></div> 
                 <ProfileCard profile={profile} groupsCount={groupsCount}/>
                 <GroupsProvider profile={profile}>
-                    <GroupsContainer cardsSize={180} setGroupsCount={setGroupsCount}/>
+                    <GroupsContainer cardsSize={cardSize} setGroupsCount={setGroupsCount}/>
                 </GroupsProvider>
             </div>
         </div>

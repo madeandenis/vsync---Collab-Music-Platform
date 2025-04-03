@@ -13,6 +13,7 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
         if (!res.ok) {
             // Attempt parsing JSON
             const body = await responseClone.json();
+            
             throw new FetchError(status, body, url);
         }
 
@@ -33,7 +34,7 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
 
         // Fallback to text if JSON parsing fails
         if (error instanceof TypeError || error instanceof SyntaxError) {
-            body.message = 'Failed to reach server';
+            body.message = String(error);
             throw new FetchError(500, body, url);
         }
 

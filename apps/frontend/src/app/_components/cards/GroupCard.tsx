@@ -2,7 +2,7 @@ import { Group } from "@frontend/shared";
 import ThumbnailCard from "./ThumbnailCard";
 import Thumbnail from "../thumbnails/Thumbnail";
 import { FaPlay, FaRegClock, FaStop, FaUsers } from "react-icons/fa";
-import { GroupOptions } from "../GroupOptions";
+import { GroupOptions } from "../options/GroupOptions";
 import { fetchGroupSession, startGroupSession, stopGroupSession } from "../../_api/groupsSessionApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useGroupsContext } from "../../contexts/groupsContext";
@@ -12,11 +12,10 @@ import { timeSinceNow } from "../../_utils/timeUtils";
 
 interface GroupCardProps {
     group: Group;
-    size: number
+    size: number;
 }
 
 export const GroupCard = ({ group, size }: GroupCardProps) => {
-
     const { refetchAll } = useGroupsContext();
     const router = useRouter();
 
@@ -27,8 +26,8 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
     const { data: session, isError } = useQuery({
         queryKey: ['group-session', group.id],
         queryFn: ({ queryKey }) => fetchGroupSession(queryKey[1]),
-        enabled: group.isActive
-    })
+        enabled: group.isActive,
+    });
 
     const startSessionMutation = useMutation({
         mutationFn: () => startGroupSession(group.id),
@@ -42,19 +41,7 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
         onError: () => refetchAll(),
     });
 
-    const sessionAction = group.isActive ?
-        {
-            title: "Stop Session",
-            icon: <FaStop className="hover:text-red-500" />,
-            action: stopSessionMutation.mutate,
-        } :
-        {
-            title: "Start Session",
-            icon: <FaPlay className="hover:text-green-500" />,
-            action: startSessionMutation.mutate,
-        };
-
-    // Enforce cache busting 
+    // Enforce cache busting
     const timestamp = new Date().getTime();
 
     // TODO - Solve versioning mechanism
@@ -68,24 +55,30 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
                 }
             }}
             src={imageUrl ?? undefined}
-            placeHolder={<FaUsers size={size / 2} />}
+            placeHolder={<FaUsers size={size / 3} />}
             alt={`${group.name}-thumbnail`}
             size={size}
         >
             {/* Group Options  */}
             <div className="absolute top-1 right-1 z-10">
-                <GroupOptions buttonSize={size / 7} group={group} />
+                <GroupOptions
+                    buttonSize={size / 7}
+                    group={group}
+                    startSessionAction={startSessionMutation.mutate} // Pass the start session action here
+                />
             </div>
 
-            {/* Session Actions */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <button
-                    onClick={() => sessionAction.action()}
-                    className="p-3 rounded-full text-xl text-white/40 bg-black/80"
-                >
-                    {sessionAction.icon}
-                </button>
-            </div>
+            {/* Session Actions (Stop Session is still available when active) */}
+            {group.isActive && (
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <button
+                        onClick={() => stopSessionMutation.mutate()}
+                        className="p-3 rounded-full text-xl text-white/40 bg-black/80"
+                    >
+                        <FaStop className="hover:text-red-500" />
+                    </button>
+                </div>
+            )}
 
             {/* Session info overlay */}
             {session && (
@@ -96,20 +89,14 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
                             <span>{session.members.length}</span>
                         </div>
                         <div className="flex justify-center items-center">
-                            <FaRegClock size={11} className="mr-1"/>
+                            <FaRegClock size={11} className="mr-1" />
                             {timeSinceNow(new Date(session.metadata.sessionStart))}
                         </div>
                     </div>
                 </div>
             )}
-
         </Thumbnail>
     );
 
-    return (
-        <ThumbnailCard
-            thumbnail={thumbnail}
-            name={group.name}
-        />
-    )
-}                                               
+    return <ThumbnailCard thumbnail={thumbnail} name={group.name} />;
+};

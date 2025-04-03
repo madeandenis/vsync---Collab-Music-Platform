@@ -13,4 +13,4 @@ import { GroupsModule } from '../groups/groups.module';
   providers: [GroupsSesionService],
   exports: [GroupsSesionService],
 })
-export class GroupsSesionModule {}
+export class GroupsSessionModule {}

@@ -17,7 +17,8 @@ function DraggableList<T>({ items, renderItem, onItemsChange, getId }: Draggable
 
   // Update the internal items only if the items prop changes
   useEffect(() => {
-    if (items !== prevInternalItemsRef.current) {
+    const itemsChanged = JSON.stringify(items) !== JSON.stringify(prevInternalItemsRef.current);
+    if (itemsChanged) {
       setInternalItems(items);
       prevInternalItemsRef.current = items;  // Update the reference to the new items
     }
@@ -25,7 +26,8 @@ function DraggableList<T>({ items, renderItem, onItemsChange, getId }: Draggable
 
   // Update the parent when internalItems changes
   useEffect(() => {
-    if (JSON.stringify(internalItems) !== JSON.stringify(prevInternalItemsRef.current)) {
+    const internalItemsChanged = JSON.stringify(internalItems) !== JSON.stringify(prevInternalItemsRef.current);
+    if (internalItemsChanged) {
       // Update the parent only if the items have changed
       onItemsChange(internalItems);
       prevInternalItemsRef.current = [...internalItems]; // Update ref to avoid triggering again
@@ -43,6 +45,7 @@ function DraggableList<T>({ items, renderItem, onItemsChange, getId }: Draggable
       setInternalItems((prevItems) => {
         const oldIndex = prevItems.findIndex((item) => getId(item) === active.id);
         const newIndex = prevItems.findIndex((item) => getId(item) === over.id);
+
         return arrayMove(prevItems, oldIndex, newIndex);
       });
     }

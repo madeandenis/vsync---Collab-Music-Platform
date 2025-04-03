@@ -18,8 +18,8 @@ export const GroupsContainer = ({cardsSize, setGroupsCount}: GroupsContainerProp
     }, [groups, setGroupsCount])
 
     return (
-        <div className="container mx-auto w-[90%] max-w-lg rounded-xl bg-white/5 p-6 font-poppins">
-            <div className="flex flex-wrap items-center justify-center gap-2 overflow-y-auto scrollbar">
+        <div className="container mx-auto w-[90%] max-w-lg rounded-xl bg-white/5 font-poppins">
+            <div className="flex flex-wrap items-center justify-center overflow-y-auto scrollbar pt-2">
                 <CreateGroupCard size={cardsSize}/>
                 {
                     groups && groups.length > 0 && groups.map(group => (

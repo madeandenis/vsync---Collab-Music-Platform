@@ -24,7 +24,9 @@ export class SpotifyService {
   private readonly requiredScopes = [
     'user-read-private',
     'user-read-email',
-    'streaming' // Web Player SDK
+    'user-modify-playback-state',
+    'user-read-playback-state',
+    'streaming' 
 ];
 
   constructor(

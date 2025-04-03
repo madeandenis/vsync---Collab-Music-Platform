@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useState } from "react"
 import { searchTracks } from "../../_api/spotifyApi";
 import SearchBar from "./SearchBar";
 import ItemList from "../lists/ItemList";
@@ -16,7 +16,7 @@ export default function TrackSearchContainer({ onTrackAdd }: { onTrackAdd: (trac
 
     const getTrackId = (item: Track) => item.id;
     const renderTrackItem = (track: Track) => {
-        return <TrackItem key={track.id} track={track} onTrackAdd={handleOnTrackAdd} showDuration={false}/>;
+        return <TrackItem key={track.id} track={track} onAdd={handleOnTrackAdd} showDuration={false}/>;
     };
 
     const { data: tracks, isLoading, refetch } = useQuery({
