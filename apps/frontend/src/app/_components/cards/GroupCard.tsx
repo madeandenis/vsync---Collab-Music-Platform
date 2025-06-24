@@ -1,7 +1,7 @@
 import { Group } from "@frontend/shared";
 import ThumbnailCard from "./ThumbnailCard";
 import Thumbnail from "../thumbnails/Thumbnail";
-import { FaPlay, FaRegClock, FaStop, FaUsers } from "react-icons/fa";
+import { FaRegClock, FaStop, FaUsers } from "react-icons/fa";
 import { GroupOptions } from "../options/GroupOptions";
 import { fetchGroupSession, startGroupSession, stopGroupSession } from "../../_api/groupsSessionApi";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -72,7 +72,7 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
             {group.isActive && (
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                     <button
-                        onClick={() => stopSessionMutation.mutate()}
+                        onClick={() => stopSessionMutation.mutate}
                         className="p-3 rounded-full text-xl text-white/40 bg-black/80"
                     >
                         <FaStop className="hover:text-red-500" />
@@ -86,11 +86,11 @@ export const GroupCard = ({ group, size }: GroupCardProps) => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center">
                             <IoMdPeople className="mr-1" />
-                            <span>{session.members.length}</span>
+                            <span>{session.participants.length}</span>
                         </div>
                         <div className="flex justify-center items-center">
                             <FaRegClock size={11} className="mr-1" />
-                            {timeSinceNow(new Date(session.metadata.sessionStart))}
+                            {timeSinceNow(new Date(session.timestamps.createdAt))}
                         </div>
                     </div>
                 </div>

@@ -8,7 +8,7 @@ export const searchTracks = async (query: string | null): Promise<Track[]> => {
 }
 
 export const fetchAccessToken = async (): Promise<string> => {
-    return await fetchApi('/api/spotify/access-token');
+    return await fetchApi<string>('/api/spotify/access-token');
 }
 
 export type PlaybackRequest = {
@@ -16,10 +16,10 @@ export type PlaybackRequest = {
     deviceId: string;
     playback: {
         uris: string[];
-        offset: {
+        offset?: {
             position: number;
         };
-        position_ms: number;
+        position_ms?: number;
     };
 };
 

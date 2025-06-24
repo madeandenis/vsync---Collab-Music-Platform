@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { GuestUserSession, TokenData, UserProfile, UserSession } from '@frontend/shared';
+import { GuestUserSession, TokenData, UserProfile, AuthenticatedUserSession } from '@frontend/shared';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Account, MusicPlatform } from '@prisma/client';
 import { createLogger } from '../../common/utils/logger.util';
@@ -14,7 +14,7 @@ export class UsersSessionService {
         userAccount: Account,
         userProfile: UserProfile,
         tokenData: TokenData
-    ): UserSession 
+    ): AuthenticatedUserSession 
     {
         const account = {
             provider: userAccount.provider,
@@ -25,13 +25,12 @@ export class UsersSessionService {
         };
 
         return {
+            kind: 'authenticated',
             userId: userAccount.userId,
             email: userProfile.email,
             sessionId: req.sessionID,
             lastActive: new Date().toISOString(),
-            accounts: [
-                account
-            ],
+            accounts: [account],
             token: {
                 accessToken: tokenData.access_token,
                 expiresAt: tokenData.expires_in
@@ -49,6 +48,7 @@ export class UsersSessionService {
     ): GuestUserSession
     {
         return {
+            kind: 'guest',
             guestUserId,
             sessionId: req.sessionID,
             lastActive: new Date().toISOString(),
@@ -56,7 +56,7 @@ export class UsersSessionService {
         }
     }
 
-    setActiveAccount(session: UserSession, provider: MusicPlatform) {
+    setActiveAccount(session: AuthenticatedUserSession, provider: MusicPlatform) {
         const activeAccount = session.accounts?.find(account => account.provider === provider);
         if (activeAccount) {
             session.activeAccount = activeAccount;

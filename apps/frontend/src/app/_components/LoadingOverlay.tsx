@@ -1,15 +1,18 @@
 import { Backdrop } from "./Backdrop";
 import Spinner from "./Spinner";
 
-interface LoadingOverlayProps
-{
-  opacity?: number
+interface LoadingOverlayProps {
+  opacity?: number;
+  message?: string;
 }
 
-const LoadingOverlay = ({ opacity }: LoadingOverlayProps) => {
+const LoadingOverlay = ({ opacity = 0.7, message }: LoadingOverlayProps) => {
   return (
     <Backdrop opacity={opacity}>
-      <Spinner />
+      <div className="flex flex-col items-center gap-4 text-white">
+        <Spinner />
+        {message && <p className="text-sm text-white/80">{message}</p>}
+      </div>
     </Backdrop>
   );
 };

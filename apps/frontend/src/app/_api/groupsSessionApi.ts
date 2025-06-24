@@ -16,3 +16,13 @@ export const stopGroupSession = async (groupId: string): Promise<void> => {
         method: 'POST',
     });
 };
+
+export const modifyGroupSessionSettings = async (groupId: string, settings: GroupSession['settings']): Promise<GroupSession> => {
+    return await fetchApi(`/api/groups/${groupId}/session/settings`, {
+        method: 'PATCH',
+        body: JSON.stringify(settings),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+};

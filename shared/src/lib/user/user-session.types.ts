@@ -1,48 +1,51 @@
 import { MusicPlatform } from "@prisma/client";
 
 interface Account {
-    provider: MusicPlatform;
-    providerAccountId: string;
-    providerAccountUrl: string;
-    username: string;
-    avatarUrl?: string;
+  provider: MusicPlatform;
+  providerAccountId: string;
+  providerAccountUrl: string;
+  username: string;
+  avatarUrl?: string;
 }
 
-// TODO - encrypt tokens
 interface AuthToken {
-    accessToken?: string;
-    expiresAt?: string; 
+  accessToken?: string;
+  expiresAt?: string; 
 }
 
 interface SessionMetadata {
-    sessionExpiry: string; 
-    ipAddress: string;
-    userAgent: string;
+  sessionExpiry: string; 
+  ipAddress: string;
+  userAgent: string;
 }
 
-export interface UserSession {
-    userId: string;
-    email?: string; 
-    sessionId: string;
-    lastActive: string; 
-    accounts?: Account[]; 
-    token?: AuthToken;
-    metadata: SessionMetadata;
-    activeAccount: Account;
-    isAdmin?: boolean;
+interface BaseUserSession {
+  sessionId: string;
+  lastActive: string;
+  metadata: SessionMetadata;
 }
 
-export interface GuestUserSession {
-    guestUserId: string;
-    sessionId: string;
-    lastActive: string;
-    metadata: SessionMetadata;
+export interface AuthenticatedUserSession extends BaseUserSession {
+  kind: 'authenticated';
+  userId: string;
+  email?: string;
+  accounts?: Account[];
+  token?: AuthToken;
+  activeAccount: Account;
 }
 
-export function isUserSession(session: any): session is UserSession {
-    return (session as UserSession).userId !== undefined;
+export interface GuestUserSession extends BaseUserSession {
+  kind: 'guest';
+  guestUserId: string;
 }
 
-export function isGuestUserSession(session: any): session is GuestUserSession {
-    return (session as GuestUserSession).guestUserId !== undefined;
-}
+export type UserSession = AuthenticatedUserSession | GuestUserSession;
+
+export function isAuthenticatedUserSession(session: UserSession): session is AuthenticatedUserSession {
+    return session.kind === 'authenticated';
+  }
+  
+  export function isGuestUserSession(session: UserSession): session is GuestUserSession {
+    return session.kind === 'guest';
+  }
+  

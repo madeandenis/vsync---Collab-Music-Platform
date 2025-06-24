@@ -6,22 +6,34 @@ import VoteButton from "../buttons/VoteButton";
 import { RxDragHandleDots2 } from "react-icons/rx";
 import { TrackOptions } from "../options/TrackOptions";
 
-interface ScoredTrackItemProps 
-{
-    scoredTrack: ScoredTrack;    
+interface ScoredTrackItemProps {
+    scoredTrack: ScoredTrack;
     onPlay: (trackId: string) => void;
     onDownvote: (track: QueuedTrack) => void;
     onUpvote: (track: QueuedTrack) => void;
     onWithdrawVote: (track: QueuedTrack) => void;
     removeTrack: (track: QueuedTrack) => void;
+    isVoteSystemEnabled: boolean;
+    isQueueReorderingEnabled: boolean;
 }
 
-const ScoredTrackItem = ({ scoredTrack, onPlay, onUpvote, onDownvote, onWithdrawVote, removeTrack }: ScoredTrackItemProps) => {
+const ScoredTrackItem = ({
+    scoredTrack,
+    onPlay,
+    onUpvote,
+    onDownvote,
+    onWithdrawVote,
+    removeTrack,
+    isVoteSystemEnabled,
+    isQueueReorderingEnabled
+}: ScoredTrackItemProps) => {
+
     const { queuedTrack, score } = scoredTrack;
     const { trackDetails } = queuedTrack;
 
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
         id: trackDetails.id,
+        disabled: !isQueueReorderingEnabled
     });
 
     const style = {
@@ -29,24 +41,27 @@ const ScoredTrackItem = ({ scoredTrack, onPlay, onUpvote, onDownvote, onWithdraw
         transition,
     };
 
-    const leftComponent = ( 
+    const leftComponent = isQueueReorderingEnabled ? (
         <div>
-            <RxDragHandleDots2 
-                size={26} 
+            <RxDragHandleDots2
+                size={26}
                 {...listeners}
                 className="mr-1 text-white/70 cursor-grab"
             />
         </div>
-    );
+    ) : undefined;
+    
     const rightComponent = (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-1">
-            <VoteButton 
-                onUpvote={() => onUpvote(queuedTrack)} 
-                onDownvote={() => onDownvote(queuedTrack)} 
-                onWithdrawVote={() => onWithdrawVote(queuedTrack)}
-                voteCount={score}
-            />
-            <TrackOptions 
+            {isVoteSystemEnabled && (
+                <VoteButton
+                    onUpvote={() => onUpvote(queuedTrack)}
+                    onDownvote={() => onDownvote(queuedTrack)}
+                    onWithdrawVote={() => onWithdrawVote(queuedTrack)}
+                    voteCount={score}
+                />
+            )}
+            <TrackOptions
                 buttonSize={20}
                 removeTrack={() => removeTrack(queuedTrack)}
             />
@@ -60,7 +75,7 @@ const ScoredTrackItem = ({ scoredTrack, onPlay, onUpvote, onDownvote, onWithdraw
             {...attributes}
             className="cursor-default"
         >
-            <TrackItem 
+            <TrackItem
                 track={trackDetails}
                 onPlay={onPlay}
                 childrenLeft={leftComponent}

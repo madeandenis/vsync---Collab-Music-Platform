@@ -8,7 +8,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 export type AppAlert  = FetchError | Error | string;
 type AlertType = AlertProps['type']; 
 
-interface AlertContextType {
+export interface AlertContextType {
     alerts: { message: AppAlert; type: AlertType }[]; 
     setAlert: (message: AppAlert, type: AlertType, duration?: number) => void; 
     clearAlert: (index: number) => void;

@@ -1,4 +1,4 @@
-import { UserSession } from '@frontend/shared';
+import { AuthenticatedUserSession } from '@frontend/shared';
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 
@@ -6,7 +6,7 @@ import { Request } from 'express';
 export class TokenExpirationGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const userSession = request.session.user as UserSession;
+    const userSession = request.session.user as AuthenticatedUserSession;
 
     if (!userSession || !userSession.token || !userSession.token.expiresAt) {
       throw new UnauthorizedException('No valid session or token found. Please log in.');

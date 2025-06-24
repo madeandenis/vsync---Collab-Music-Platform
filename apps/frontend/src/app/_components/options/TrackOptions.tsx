@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { FaEllipsisH, FaEllipsisV, FaTrash } from "react-icons/fa";
 import OptionsList, { Option } from "./OptionsList";
 import { useMediaQuery } from 'react-responsive';
+import { useClickOutside } from "../../_utils/domUtils";
 
 interface TrackOptionsProps {
   buttonSize: number;
@@ -10,26 +11,12 @@ interface TrackOptionsProps {
 
 export const TrackOptions = ({ buttonSize, removeTrack }: TrackOptionsProps) => {
   const [openList, setOpenList] = useState(false);
-  const trackOptionsRef = useRef<HTMLDivElement>(null);
+  const trackOptionsRef = useRef<HTMLDivElement | null>(null);
   
   const isSmallScreen = useMediaQuery({ minWidth: 500 });
   
   const toggleOpenList = () => setOpenList((prev) => !prev);
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        trackOptionsRef.current &&
-        !trackOptionsRef.current.contains(event.target as Node)
-      ) {
-        setOpenList(false); // Close menu when clicking outside
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  useClickOutside(trackOptionsRef, () => setOpenList(false));
 
   const DeleteTrack: Option = {
     label: "Delete Track",

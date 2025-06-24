@@ -12,42 +12,46 @@ interface DraggableListProps<T> {
 
 function DraggableList<T>({ items, renderItem, onItemsChange, getId }: DraggableListProps<T>) {
   const [internalItems, setInternalItems] = useState(items);
+  
+  // Use a ref to track if we need to call onItemsChange
+  const pendingUpdate = useRef<T[] | null>(null);
 
-  const prevInternalItemsRef = useRef<T[]>(items);
-
-  // Update the internal items only if the items prop changes
+  // Whenever the incoming 'items' prop changes, 
+  // update our internal copy too so we stay in sync.
   useEffect(() => {
-    const itemsChanged = JSON.stringify(items) !== JSON.stringify(prevInternalItemsRef.current);
-    if (itemsChanged) {
-      setInternalItems(items);
-      prevInternalItemsRef.current = items;  // Update the reference to the new items
-    }
-  }, [items]);  // Only triggers when items change
+    setInternalItems(items);
+  }, [items]);
 
-  // Update the parent when internalItems changes
+  // Handle calling onItemsChange outside of render
   useEffect(() => {
-    const internalItemsChanged = JSON.stringify(internalItems) !== JSON.stringify(prevInternalItemsRef.current);
-    if (internalItemsChanged) {
-      // Update the parent only if the items have changed
-      onItemsChange(internalItems);
-      prevInternalItemsRef.current = [...internalItems]; // Update ref to avoid triggering again
+    if (pendingUpdate.current) {
+      onItemsChange(pendingUpdate.current);
+      pendingUpdate.current = null;
     }
-  }, [internalItems, onItemsChange]);
+  });
 
-  // Set up sensors for drag-and-drop
+  // Setting up the pointer sensor for drag-and-drop (mouse/touch detection)
   const sensors = useSensors(useSensor(PointerSensor));
 
+  // Handle what happens when the user finishes dragging an item
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
 
-    // If the item is dropped in a new position reorder the items
-    if (active.id !== over.id) {
-      setInternalItems((prevItems) => {
-        const oldIndex = prevItems.findIndex((item) => getId(item) === active.id);
-        const newIndex = prevItems.findIndex((item) => getId(item) === over.id);
+    if (!over) return;
 
-        return arrayMove(prevItems, oldIndex, newIndex);
-      });
+    if (active.id !== over.id) {
+      // Find the index of the dragged item (active) and the item it was dropped over (over)
+      const oldIndex = internalItems.findIndex((item) => getId(item) === active.id);
+      const newIndex = internalItems.findIndex((item) => getId(item) === over.id);
+
+      // Reorder the list by moving the item from oldIndex to newIndex
+      const newItems = arrayMove(internalItems, oldIndex, newIndex);
+      
+      // Update internalItems with the new list for local rendering
+      setInternalItems(newItems);
+      
+      // Store the updated items to trigger the callback in useEffect
+      pendingUpdate.current = newItems;
     }
   };
 

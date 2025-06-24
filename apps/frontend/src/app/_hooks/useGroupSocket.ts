@@ -1,23 +1,42 @@
-import { Events, GroupSession, QueuedTrack, ScoredTrack, Track } from "@frontend/shared";
-import { useCallback, useEffect, useState } from "react";
+import { Events, GroupSession, QueuedTrack, ScoredTrack, Track, UserSession } from "@frontend/shared";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-interface GroupSocketHook {
-    groupId: string;
+export interface GroupSocketEventHandlers {
+    onQueueUpdate: (queue: ScoredTrack[]) => void;
+    onSessionUpdate: (session: GroupSession) => void;
+    onNowPlayingUpdate: (nowPlaying: GroupSession['nowPlaying']) => void;
     onDisconnect: () => void;
-    onConnectionError: (error: string) => void;
-    onSocketError: (error: string) => void;
+    onError: (error: string) => void;
 }
 
-const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketError }: GroupSocketHook) => {
+export interface GroupSocketActions {
+    syncQueue: (updatedQueue: ScoredTrack[]) => void;
+    syncSession: (updatedSession: GroupSession) => void;
+    playback: {
+        pause: (trackId: string, progressMs: number) => void;
+        resume: (trackId: string, progressMs: number) => void;
+        play: (trackId: string) => void;
+        next: (trackId: string) => void;
+        previous: (trackId: string) => void;
+        seek: (trackId: string, seekPosition: number) => void;
+    };
+    queue: {
+        add: (track: Track, score: number) => void;
+        remove: (queuedTrack: QueuedTrack) => void;
+        upvote: (queuedTrack: QueuedTrack) => void;
+        downvote: (queuedTrack: QueuedTrack) => void;
+        withdrawVote: (queuedTrack: QueuedTrack) => void;
+    };
+}
+
+const useGroupSocket = (groupId: string, eventHandlers: GroupSocketEventHandlers) => {
+
     const [socket, setSocket] = useState<Socket | null>(null);
-    const [socketError, setSocketError] = useState<string | null>(null);
-    const [connectionError, setConnectionError] = useState<string | null>(null);
-    const [session, setSession] = useState<GroupSession | null>(null);
-    const [queue, setQueueState] = useState<ScoredTrack[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!groupId || connectionError) return;
+        if (!groupId) return;
 
         const newSocket = io("ws://localhost:5000/group/session", {
             query: { groupId },
@@ -27,77 +46,91 @@ const useGroupSocket = ({ groupId, onDisconnect, onConnectionError, onSocketErro
 
         setSocket(newSocket);
 
-        newSocket.on(Events.Socket.Disconnect, () => {
-            onDisconnect()
+        // Connection events
+        newSocket.on(Events.Socket.DISCONNECT, eventHandlers.onDisconnect);
+
+        newSocket.on(Events.Socket.ERROR, (error: string) => {
+            setError(error);
+            eventHandlers.onError(error);
         });
 
-        newSocket.on(Events.Socket.Error, (error: string) => {
-            setSocketError(error);
-            onSocketError(error);
-        });
-    
-        newSocket.on(Events.Socket.ConnectError, (error) => {
+        newSocket.on(Events.Socket.CONNECT_ERROR, (error) => {
             const errorMessage = error.message || "Failed to connect to server";
-            setConnectionError(errorMessage);
-            onConnectionError(errorMessage);
+            eventHandlers.onError(errorMessage);
+            eventHandlers.onDisconnect();
+
         });
 
-        newSocket.on(Events.Group.Queue, (queue: ScoredTrack[]) => {
-            console.log('Received queue update:', queue);
-            setQueueState(queue);
-        });
-        newSocket.on(Events.Group.Session, (session: GroupSession) => {
-            setSession(session);
-        });
+        // Group events
+        newSocket.on(Events.Group.QUEUE, eventHandlers.onQueueUpdate);
+        newSocket.on(Events.Group.SESSION, eventHandlers.onSessionUpdate);
+        newSocket.on(Events.Track.NOW_PLAYING, eventHandlers.onNowPlayingUpdate);
 
-        // TODO - Handle no active session error from the server
 
         return () => {
-            if (socket) {
-                socket.disconnect();
+            if (newSocket) {
+                newSocket.off();
+                newSocket.disconnect();
             }
         };
 
-    }, [groupId, connectionError]);
+    }, [groupId]);
 
-    const setQueue = useCallback((updatedQueue: ScoredTrack[]) => {
-        setQueueState(updatedQueue);
-        if (socket) {
-            socket.emit(Events.Group.UpdateQueue, updatedQueue);
-        }
+    const syncQueue = useCallback((updatedQueue: ScoredTrack[]) => {
+        socket?.emit(Events.Group.UPDATE_QUEUE, updatedQueue);
     }, [socket]);
 
-    const addTrack = useCallback((track: Track, score: number) => {
-        if (socket) {
-            socket.emit(Events.Track.Add, { track, score });
-        }
-    }, [socket])
-
-    const upvoteTrack = useCallback((queuedTrack: QueuedTrack) => {
-        if (socket) {
-            socket.emit(Events.Track.UpVote, queuedTrack);
-        }
-    }, [socket]);
-    const downvoteTrack = useCallback((queuedTrack: QueuedTrack) => {
-        if (socket) {
-            socket.emit(Events.Track.DownVote, queuedTrack);
-        }
-    }, [socket]);
-    
-    const withdrawTrack = useCallback((queuedTrack: QueuedTrack) => {
-        if (socket) {
-            socket.emit(Events.Track.WithdrawVote, queuedTrack);
-        }
+    const syncSession = useCallback((updatedSession: GroupSession) => {
+        socket?.emit(Events.Group.EMIT_SESSION, updatedSession);
     }, [socket]);
 
-    const removeTrack = useCallback((queuedTrack: QueuedTrack) => {
-        if (socket) {
-            socket.emit(Events.Track.Remove, queuedTrack);
+    const createTrackEvent = (event: string) =>
+        (trackId: string, progressMs: number = 0) => {
+            socket?.emit(event, {
+                trackId,
+                progressMs,
+                clientUpdatedAt: new Date().toISOString()
+            });
+        };
+
+    const createQueuedTrackEvent = (event: string) =>
+        (queuedTrack: QueuedTrack) => {
+            socket?.emit(event, queuedTrack);
+        };
+
+    const actions: GroupSocketActions = {
+        syncQueue,
+        syncSession,
+        playback: {
+            pause: createTrackEvent(Events.Track.PAUSE),
+            resume: createTrackEvent(Events.Track.RESUME),
+            play: createTrackEvent(Events.Track.PLAY),
+            next: createTrackEvent(Events.Track.NEXT),
+            previous: createTrackEvent(Events.Track.PREVIOUS),
+            seek: (trackId: string, seekPosition: number) => {
+                socket?.emit(Events.Track.SEEK, {
+                    trackId,
+                    seekPosition,
+                    clientUpdatedAt: new Date().toISOString()
+                });
+            }
+        },
+        queue: {
+            add: (track: Track, score: number) => {
+                socket?.emit(Events.Track.ADD, { track, score });
+            },
+            remove: createQueuedTrackEvent(Events.Track.REMOVE),
+            upvote: createQueuedTrackEvent(Events.Track.UPVOTE),
+            downvote: createQueuedTrackEvent(Events.Track.DOWNVOTE),
+            withdrawVote: createQueuedTrackEvent(Events.Track.WITHDRAW_VOTE),
         }
-    }, [socket]);
+    };
 
-    return { socketError, connectionError, queue, session, setQueue, addTrack, upvoteTrack, downvoteTrack, withdrawTrack, removeTrack };
-
+    return {
+        socket: socket,
+        error,
+        actions
+    };
 }
 
 export default useGroupSocket;

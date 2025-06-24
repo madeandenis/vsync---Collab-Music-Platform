@@ -28,3 +28,7 @@ export const formatMs= (ms: number): string => {
   return hours > 0 ? `${formattedHours}:${formattedMinutes}:${formattedSeconds}` : `${formattedMinutes}:${formattedSeconds}`;
 };
 
+export const isValidDate = (value: any) => {
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+};

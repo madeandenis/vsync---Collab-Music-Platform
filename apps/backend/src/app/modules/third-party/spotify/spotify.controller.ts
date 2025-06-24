@@ -4,7 +4,7 @@ import { SpotifyService } from './spotify.service';
 import { generateRandomString } from '../../../common/utils/crypto.util';
 import { sendHttpErrorResponse, respond } from '../../../common/utils/response.util';
 import { createLogger } from '../../../common/utils/logger.util';
-import { GuestUserSession, isGuestUserSession, TokenData, UserProfile, UserSession } from '@frontend/shared';
+import { GuestUserSession, isGuestUserSession, TokenData, UserProfile, AuthenticatedUserSession } from '@frontend/shared';
 import { AuthService } from '../../auth/auth.service';
 import { MusicPlatform } from '@prisma/client';
 import { isValidUrl, splitUrl } from '../../../common/utils/url.util';
@@ -121,7 +121,7 @@ export class SpotifyController {
   {
     try
     {
-      const session: UserSession | GuestUserSession = req.session.user;
+      const session: AuthenticatedUserSession | GuestUserSession = req.session.user;
 
       if(isGuestUserSession(session)){
         throw new UnauthorizedException('You are not authorized to access this resource. Please log in.');
@@ -195,7 +195,7 @@ export class SpotifyController {
   {
     try
     {
-      const user = req.session.user as UserSession;
+      const user = req.session.user as AuthenticatedUserSession;
       const accessToken = user.token.accessToken;
 
       const userProfile = await this.spotifyService.fetchUserProfile(accessToken);
@@ -214,7 +214,7 @@ export class SpotifyController {
   {
     try
     {
-      const user = req.session.user as UserSession;
+      const user = req.session.user as AuthenticatedUserSession;
       const accessToken = user.token.accessToken;
 
       const playlists = await this.spotifyService.fetchUserPlaylists(accessToken);
@@ -238,7 +238,7 @@ export class SpotifyController {
 
     try
     {
-      const user = req.session.user as UserSession;
+      const user = req.session.user as AuthenticatedUserSession;
       const accessToken = user.token.accessToken;
       const tracks = await this.spotifyService.searchTracks(accessToken, query);
 

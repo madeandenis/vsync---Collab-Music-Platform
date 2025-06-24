@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { EditGroupForm } from '../forms/EditGroupForm';
 import { Group } from '@frontend/shared';
 import DeleteGroupForm from '../forms/DeleteGroupForm';
+import { useClickOutside } from '../../_utils/domUtils';
 
 interface GroupOptionsProps {
     buttonSize: number;
@@ -19,21 +20,7 @@ export const GroupOptions = ({ buttonSize, group, startSessionAction }: GroupOpt
 
     const toggleOpenList = () => setOpenList((prevState) => !prevState);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                groupOptionsRef.current &&
-                !groupOptionsRef.current.contains(event.target as Node)
-            ) {
-                setOpenList(false); // Close the list
-            }
-        };i
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    useClickOutside(groupOptionsRef, () => setOpenList(false));
 
     const EditGroup: Option = {
         label: 'Edit Group',

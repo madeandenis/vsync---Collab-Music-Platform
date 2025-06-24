@@ -22,11 +22,11 @@ export const GroupForm = ({ setOpen, context }: GroupFormProps) => {
         }
     }, []);
 
-    const closeModal = (e: React.MouseEvent) => {
+    function closeModal (e: React.MouseEvent) {
         e.stopPropagation();
         setOpen(false);
     };
-    const handleContentClick = (e: React.MouseEvent) => {
+    function handleContentClick (e: React.MouseEvent) {
         e.stopPropagation();
         setOpen(true);
     };
@@ -35,7 +35,7 @@ export const GroupForm = ({ setOpen, context }: GroupFormProps) => {
         <Backdrop opacity={40} onClick={closeModal}>
             
             {/* Modal Container */}
-            <div className="container mx-auto px-6 py-4 w-3/4 max-w-2xl rounded-xl bg-graphite" onClick={handleContentClick}>
+            <div className="container mx-auto px-6 py-4 w-11/12 sm:w-3/4 max-w-xl rounded-xl bg-graphite" onClick={handleContentClick}>
 
                 {/* Header Section */}
                 <div className="flex justify-between items-center">
@@ -53,7 +53,7 @@ export const GroupForm = ({ setOpen, context }: GroupFormProps) => {
                     </div>
                 </div>
                 {/* Group Thumbnail and Input Fields */}
-                <div className="mt-8 flex gap-6 justify-between items-center">
+                <div className="mt-8 flex flex-col sm:flex-row gap-6 justify-between items-center">
 
                     {/* Group Thumbnail */}
                     <div className="relative shadow-hover-black">

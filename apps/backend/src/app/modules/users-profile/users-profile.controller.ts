@@ -3,7 +3,7 @@ import { RegisteredUserGuard } from '../../common/guards/registered-user.guard';
 import { sendHttpErrorResponse, respond } from '../../common/utils/response.util';
 import { Request, Response } from 'express';
 import { MusicPlatform } from '@prisma/client';
-import { UserSession } from '@frontend/shared';
+import { AuthenticatedUserSession } from '@frontend/shared';
 
 @Controller('user-profile')
 export class UsersProfileController {
@@ -14,7 +14,7 @@ export class UsersProfileController {
   {
     try 
     {
-      const user = req.session.user as UserSession;
+      const user = req.session.user as AuthenticatedUserSession;
       const validProvider = await this.getValidProvider(user.activeAccount.provider);
 
       return res.redirect(this.profileRoutes[validProvider]);

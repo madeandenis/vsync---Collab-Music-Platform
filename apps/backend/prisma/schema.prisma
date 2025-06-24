@@ -67,8 +67,7 @@ model Group {
   description         String?            
   imageUrl            String?  
 
-  isPublic            Boolean         @default(true)
-  isActive            Boolean         @default(true)
+  isPublic            Boolean         @default(false)
   
   platform            MusicPlatform   
   sessionBackup       Json?           

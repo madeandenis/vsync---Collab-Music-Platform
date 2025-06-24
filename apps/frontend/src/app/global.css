@@ -80,3 +80,77 @@
 .scrollbar::-webkit-scrollbar-thumb { 
   background:#000;
 }
+
+/* Sliders */
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--fill-color) 0%,
+    var(--fill-color) var(--progress-percent),
+    var(--track-color) var(--progress-percent),
+    var(--track-color) 100%
+  );
+  transition: all 0.15s ease;
+}
+
+/* WebKit (Chrome, Safari) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  border-radius: var(--thumb-radius);
+  background: var(--thumb-color);
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+/* Firefox */
+.slider::-moz-range-thumb {
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  border-radius: var(--thumb-radius);
+  background: var(--thumb-color);
+  cursor: pointer;
+}
+
+/* Edge / IE */
+.slider::-ms-thumb {
+  width: var(--thumb-width);
+  height: var(--thumb-height);
+  border-radius: var(--thumb-radius);
+  background: var(--thumb-color);
+  cursor: pointer;
+}
+
+.slider-hide-thumb::-webkit-slider-thumb {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.slider-hide-thumb:hover::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.slider-hide-thumb::-moz-range-thumb {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.slider-hide-thumb:hover::-moz-range-thumb {
+  opacity: 1;
+}
+
+.slider-hide-thumb::-ms-thumb {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.slider-hide-thumb:hover::-ms-thumb {
+  opacity: 1;
+}
