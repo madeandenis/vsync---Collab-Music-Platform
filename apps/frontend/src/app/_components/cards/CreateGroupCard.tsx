@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CreateGroupForm } from "../forms/CreateGroupForm";
 import Thumbnail from "../thumbnails/Thumbnail";
 import { FaPlus } from "react-icons/fa";
+import { useGroupsContext } from "../../contexts/groupsContext";
 
 interface CreateGroupCardProps
 {
@@ -13,6 +14,8 @@ interface CreateGroupCardProps
 
 export const CreateGroupCard = ({ size }: CreateGroupCardProps) => {
     const [openForm, setOpenForm] = useState(false);
+
+    const { refetchAll } = useGroupsContext();
 
     const thumbnail = <Thumbnail 
         src={undefined}
@@ -28,7 +31,7 @@ export const CreateGroupCard = ({ size }: CreateGroupCardProps) => {
                 name={'Create group'}
                 onClick={() => setOpenForm(true)}
             />
-            {openForm && <CreateGroupForm setOpen={setOpenForm}/>}
+            {openForm && <CreateGroupForm setOpen={setOpenForm} refetchAll={refetchAll}/>}
         </>
     )
 }

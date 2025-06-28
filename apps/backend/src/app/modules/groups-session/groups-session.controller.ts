@@ -115,5 +115,27 @@ export class GroupsSesionController {
       sendHttpErrorResponse(res, error);
     }
   }
+
+  @Get('admin-status')
+  public async isAdminOfGroupSession(
+    @Res() res: Response,
+    @Req() req: Request,
+    @Param('groupId', ParseUUIDPipe) groupId: string
+  ) {
+    try {
+      const user = req.session.user as AuthenticatedUserSession;
+      const groupSession: GroupSession = await this.groupsSessionService.cache.get(groupId);
+
+      if (!groupSession) {
+        return respond(res).failure(HttpStatus.NOT_FOUND, 'No active session found for this group');
+      }
+
+      const isAdmin = user && user.userId === groupSession.hostAccountId;
+      return respond(res).success(HttpStatus.OK, { isAdmin });
+    } catch (error) {
+      this.logger.error(error, 'Check admin status error');
+      sendHttpErrorResponse(res, error);
+    }
+  }
   
 }

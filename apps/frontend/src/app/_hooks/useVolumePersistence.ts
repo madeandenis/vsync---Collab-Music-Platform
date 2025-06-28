@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 const VOLUME_STORAGE_KEY = "player-volume";
 
-export function useVolumeControl(initialVolume = 0.5) {
+export function useVolumePersistence(initialVolume = 0.5) {
   const [volume, setVolume] = useState(() => {
     const savedVolume = localStorage.getItem(VOLUME_STORAGE_KEY);
     return savedVolume ? parseFloat(savedVolume) : initialVolume;

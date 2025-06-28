@@ -1,5 +1,5 @@
 "use client";
-
+import { useEffect } from 'react';
 import { AlertProvider } from './contexts/alertContext';
 import './global.css';
 
@@ -17,9 +17,9 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
       </head>
       <body>
-        <AlertProvider>
-          {children}
-        </AlertProvider>
+          <AlertProvider>
+            {children}
+          </AlertProvider>
       </body>
     </html>
   );

@@ -3,51 +3,49 @@ import { formatMs } from "../../../_utils/timeUtils";
 import Slider from "../../sliders/Slider";
 
 interface PlaybackSeekBarProps {
-  isReady: boolean;
   duration?: number;
   playbackPosition?: number;
-  onChange?: (value: number) => void;
+  onSeek: (value: number) => void;
 }
 
-export default function PlaybackSeekBar({ isReady, duration, playbackPosition, onChange }: PlaybackSeekBarProps) {
+export default function PlaybackSeekBar({ 
+  duration,
+  playbackPosition,
+  onSeek: onChange
+}: PlaybackSeekBarProps) {
   const [dragPosition, setDragPosition] = useState<number | undefined>(playbackPosition);
   const isDraggingRef = useRef(false);
 
   // Sync drag position with playbackPosition when not dragging
   useEffect(() => {
-    if (!isDraggingRef.current && isReady) {
-      setDragPosition(playbackPosition);
-    }
-  }, [playbackPosition, isReady]);
+    if (isDraggingRef.current) return;
+
+    setDragPosition(playbackPosition);
+  }, [playbackPosition]);
 
   // Start dragging
   const handleDragStart = () => {
-    if (!isReady) return;
+
     isDraggingRef.current = true;
   };
 
   // Update position while dragging
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isReady) return;
+
     setDragPosition(parseInt(e.target.value));
   };
 
   // Stop dragging and notify parent
   const handleSliderRelease = () => {
-    if (!isReady) return;
-    if (dragPosition !== undefined && onChange) {
-      onChange(dragPosition);
-    }
+    
+    if (dragPosition === undefined || !onChange) return;
+
+    onChange(dragPosition);
     isDraggingRef.current = false;
   };
 
-  const currentTime = isReady 
-    ? (dragPosition !== undefined ? formatMs(dragPosition) : '--:--')
-    : '--:--';
-  
-  const totalDuration = isReady 
-    ? (duration !== undefined ? formatMs(duration) : '--:--')
-    : '--:--';
+  const currentTime = dragPosition !== undefined ? formatMs(dragPosition) : '--:--';
+  const totalDuration = duration !== undefined ? formatMs(duration) : '--:--';
 
   return (
     <div className="flex items-center gap-2 text-xs text-white/90 w-full">
@@ -68,7 +66,7 @@ export default function PlaybackSeekBar({ isReady, duration, playbackPosition, o
         onTouchEnd={handleSliderRelease}
         displayThumb={false}
         className="w-full"
-        disabled={!isReady}
+        disabled={!duration}
       />
 
       {/* Total duration */}

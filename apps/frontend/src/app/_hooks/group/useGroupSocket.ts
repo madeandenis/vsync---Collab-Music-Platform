@@ -17,8 +17,8 @@ export interface GroupSocketActions {
         pause: (trackId: string, progressMs: number) => void;
         resume: (trackId: string, progressMs: number) => void;
         play: (trackId: string) => void;
-        next: (trackId: string) => void;
-        previous: (trackId: string) => void;
+        nextTrack: (trackId: string) => void;
+        previousTrack: (trackId: string) => void;
         seek: (trackId: string, seekPosition: number) => void;
     };
     queue: {
@@ -105,8 +105,8 @@ const useGroupSocket = (groupId: string, eventHandlers: GroupSocketEventHandlers
             pause: createTrackEvent(Events.Track.PAUSE),
             resume: createTrackEvent(Events.Track.RESUME),
             play: createTrackEvent(Events.Track.PLAY),
-            next: createTrackEvent(Events.Track.NEXT),
-            previous: createTrackEvent(Events.Track.PREVIOUS),
+            nextTrack: createTrackEvent(Events.Track.NEXT),
+            previousTrack: createTrackEvent(Events.Track.PREVIOUS),
             seek: (trackId: string, seekPosition: number) => {
                 socket?.emit(Events.Track.SEEK, {
                     trackId,

@@ -9,19 +9,19 @@ import { GroupParticipants } from '../lists/GroupParticipantsList';
 interface GroupInfoCardProps {
     group: Group; 
     session: GroupSession | null;
-    sessionAdminPanel?: React.ReactNode;
+    panel?: React.ReactNode;
 }
 
 const GroupInfoCard = ({ 
     group,
     session,
-    sessionAdminPanel,
+    panel,
 }: GroupInfoCardProps) => {
     return (
         <div className="relative flex flex-col sm:flex-row items-center gap-6">
-            {/* Admin Panel */}
+            {/* Panel */}
             <div className="absolute right-0 top-0">
-                {sessionAdminPanel}
+                {panel}
             </div>
 
             {/* Group Thumbnail */}
@@ -36,7 +36,9 @@ const GroupInfoCard = ({
                 <h1 className="text-3xl text-white font-extrabold font-poppins break-words">{group.name}</h1>
                 {
                     group.description &&
-                    <p className="text-xs text-white text-opacity-60 font-poppins break-words">{group.description}</p>
+                    <div className='w-10/12 pb-2'>
+                        <p className="text-xs text-white text-opacity-60 font-poppins break-words">{group.description}</p>
+                    </div>
                 }
                 <div className='flex flex-wrap gap-x-4 gap-y-2 items-center font-poppins'>
                     <span className="flex items-center gap-1">

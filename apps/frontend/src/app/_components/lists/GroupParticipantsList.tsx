@@ -23,7 +23,7 @@ export function GroupParticipants({
     return (
         <div className="relative flex flex-col gap-1 font-poppins">
             <div
-                className="flex flex-row items-center justify-between gap-3 p-2 bg-white/10 text-white/80 rounded cursor-pointer"
+                className="w-max flex flex-row items-center justify-between gap-3 p-2 bg-white/10 text-white/80 rounded cursor-pointer"
                 onClick={() => setIsListOpen((prev) => !prev)}
             >
                 <div className="flex items-center gap-2 text-sm">

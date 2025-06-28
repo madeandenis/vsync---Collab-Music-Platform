@@ -20,19 +20,34 @@ const ProfileCard = ({ profile, groupsCount = 0 }: { profile: UserProfile, group
     return (
         <div className="container mx-auto w-[90%] max-w-lg rounded-xl bg-white/5 p-6 sm:p-10">
             <div className="flex flex-col sm:flex-row items-center gap-6">
-                {/* Avatar */}
-                <Avatar
-                    src={avatarProps.src}
-                    defaultSrc={avatarPlaceholder(profile.display_name || 'Unknown')}
-                    alt={`${profile.display_name} avatar`}
-                    size={avatarProps.size}
-                    className={avatarProps.className}
-                    rounded
-                />
+                <div className="flex-shrink-0">
+                    {/* Avatar */}
+
+                    <Avatar
+                        src={avatarProps.src}
+                        defaultSrc={avatarPlaceholder(profile.display_name || 'Unknown')}
+                        alt={`${profile.display_name} avatar`}
+                        size={avatarProps.size}
+                        className={avatarProps.className}
+                        rounded
+                    />
+                </div>
                 {/* Profile Info */}
                 <div className='flex flex-col gap-y-1'>
                     <h1 className="text-sm text-white text-opacity-80 font-poppins hidden sm:inline">Profile</h1>
-                    <h1 className="text-6xl text-white font-extrabold font-poppins">{profile.display_name}</h1>
+                    <h1
+                        className="text-white font-extrabold font-poppins break-words"
+                        style={{
+                            fontSize:
+                                (profile.display_name ?? 'Unknown').length > 8
+                                    ? '2.5rem'
+                                    : (profile.display_name ?? 'Unknown').length  > 3
+                                        ? '3.5rem'
+                                        : '4.5rem',
+                        }}
+                    >
+                        {profile.display_name}
+                    </h1>
                     <div className='flex gap-1'>
                         {(profile.followers?.total ?? 0) > 0 || groupsCount > 0 ? (
                             <div className="flex gap-1 text-sm text-white text-opacity-80 font-poppins">

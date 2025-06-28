@@ -5,6 +5,7 @@ import { EditGroupForm } from '../forms/EditGroupForm';
 import { Group } from '@frontend/shared';
 import DeleteGroupForm from '../forms/DeleteGroupForm';
 import { useClickOutside } from '../../_utils/domUtils';
+import { useGroupsContext } from '../../contexts/groupsContext';
 
 interface GroupOptionsProps {
     buttonSize: number;
@@ -17,6 +18,8 @@ export const GroupOptions = ({ buttonSize, group, startSessionAction }: GroupOpt
     const [openEditForm, setEditOpenForm] = useState(false);
     const [openDeleteForm, setDeleteOpenForm] = useState(false);
     const groupOptionsRef = useRef<HTMLDivElement>(null);
+
+    const { refetchAll } = useGroupsContext();
 
     const toggleOpenList = () => setOpenList((prevState) => !prevState);
 
@@ -58,7 +61,7 @@ export const GroupOptions = ({ buttonSize, group, startSessionAction }: GroupOpt
         >
             <FaEllipsisH size={buttonSize} className="text-white/80" onClick={() => toggleOpenList()} />
             {openList && <OptionsList options={options} hideLabels={true} />}
-            {openEditForm && <EditGroupForm setOpen={setEditOpenForm} group={group} />}
+            {openEditForm && <EditGroupForm setOpen={setEditOpenForm} group={group} refetchAll={refetchAll}/>}
             {openDeleteForm && <DeleteGroupForm setOpen={setDeleteOpenForm} group={group} />}
         </div>
     );

@@ -3,8 +3,8 @@ import { Backdrop } from "../Backdrop";
 import Thumbnail from "../thumbnails/Thumbnail";
 import { FaUsers } from "react-icons/fa";
 import { APP_NAME } from "../../_constants/appConfig";
-import { GroupFormContext } from "../../_hooks/useGroupForm";
 import { normalize } from "../../_utils/sanitizeUtils";
+import { GroupFormContext } from "../../_hooks/group/useGroupForm";
 
 interface GroupFormProps {
     setOpen: Dispatch<SetStateAction<boolean>>;

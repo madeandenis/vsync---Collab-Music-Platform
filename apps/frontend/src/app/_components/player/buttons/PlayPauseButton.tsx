@@ -1,54 +1,57 @@
 import { IoMdPlay, IoMdPause } from "react-icons/io";
-import { ImSpinner8 } from "react-icons/im";
+import { HiMiniPlayPause } from "react-icons/hi2";
+import { Playback } from "../../../_types/playback.types";
 
-type PlayButtonProps = {
-  isReady: boolean;
-  isPaused: boolean;
-  isLoading: boolean;
-  onPause?: () => Promise<void>;
-  onResume?: () => Promise<void>;
+interface PlayButtonProps {
+  playbackState: Playback.State | null;
+  isProcessing: boolean;
+  setIsProcessing: (processing: boolean) => void;
+  onStartPlayback: () => Promise<void>;
+  onTogglePlay: ( )=> Promise<void>;
+  iconSize: number;
 };
 
 const PlayPauseButton = ({
-  isReady,
-  isPaused,
-  isLoading,
-  onPause,
-  onResume,
+  playbackState,
+  isProcessing,
+  setIsProcessing,
+  onStartPlayback,
+  onTogglePlay,
+  iconSize,
 }: PlayButtonProps) => {
-  const handleClick = async () => {
-    if (isPaused && onResume) {
-      await onResume();
-    } else if (!isPaused && onPause) {
-      await onPause();
+
+  async function handleClick() {
+    setIsProcessing(true);
+
+    console.log(playbackState?.track_window);
+
+    try {
+      if(!playbackState?.track_window?.current_track){
+        await onStartPlayback();
+      } else {
+        await onTogglePlay();
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const renderLoadingSpinner = () => (
-    <div className="absolute flex items-center justify-center pointer-events-none">
-      <ImSpinner8 size={60} className="text-white/20 animate-spin" />
-    </div>
-  );
-
-  const buttonAriaLabel = isPaused ? "Play" : "Pause";
-
-  const buttonIcon = isPaused ? <IoMdPlay size={18} /> : <IoMdPause size={18} />;
-
   return (
-    <div className="relative flex items-center justify-center">
-      {/* Show loading spinner when isLoading is true */}
-      {isLoading && renderLoadingSpinner()}
-
-      {/* Play/Pause button */}
-      <button
-        disabled={!isReady || isLoading}
-        onClick={handleClick}
-        className="flex items-center justify-center p-3 rounded-full bg-white text-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        aria-label={buttonAriaLabel}
-      >
-        {buttonIcon}
-      </button>
-    </div>
+    <button
+      disabled={isProcessing}
+      onClick={handleClick}
+      className="flex items-center justify-center p-3 rounded-full bg-white text-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+    >
+      {
+        !playbackState?.track_window?.current_track ? (
+          <HiMiniPlayPause size={iconSize} />
+        ) : playbackState?.paused ? (
+          <IoMdPlay size={iconSize} />
+        ) : (
+          <IoMdPause size={iconSize} />
+        )
+      }
+    </button>
   );
 };
 

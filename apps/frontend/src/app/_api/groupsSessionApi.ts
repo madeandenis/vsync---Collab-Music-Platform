@@ -26,3 +26,8 @@ export const modifyGroupSessionSettings = async (groupId: string, settings: Grou
         },
     });
 };
+
+export const fetchGroupSessionAdminStatus = async (groupId: string): Promise<boolean> => {
+    const res = await fetchApi<{ isAdmin: boolean }>(`/api/groups/${groupId}/session/admin-status`);
+    return res.isAdmin;
+};

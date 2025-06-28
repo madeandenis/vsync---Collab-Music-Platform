@@ -4,39 +4,36 @@ import Slider from "../../sliders/Slider";
 import { useClickOutside } from "../../../_utils/domUtils";
 
 interface VolumeIconProps {
-  currentVolume: number;
+  currentVolume: number; // 0 to 1
+  iconSize: number;
+}
+
+interface VolumeControlProps {
+  volume?: number; // 0–1
+  onSetVolume?: (value: number) => void;
   iconSize: number;
 }
 
 const VolumeIcon = ({ currentVolume, iconSize }: VolumeIconProps) => {
   if (currentVolume === 0) return <FaVolumeMute size={iconSize} />;
-  if (currentVolume < 15) return <FaVolumeOff size={iconSize} />;
-  if (currentVolume < 65) return <FaVolumeDown size={iconSize} />;
-  if (currentVolume <= 100) return <FaVolumeUp size={iconSize} />;
+  if (currentVolume < 0.15) return <FaVolumeOff size={iconSize} />;
+  if (currentVolume < 0.65) return <FaVolumeDown size={iconSize} />;
+  if (currentVolume <= 1) return <FaVolumeUp size={iconSize} />;
   return <FaVolumeDown size={iconSize} />;
 };
 
-interface VolumeControlProps {
-  isReady: boolean;
-  volume?: number; // 0–100
-  iconSize?: number;
-  onChange?: (value: number) => void;
-}
-
-export default function VolumeControl({ isReady, volume = 50, iconSize = 18, onChange }: VolumeControlProps) {
-  // State
+export default function VolumeControl({ volume = 0.5, iconSize, onSetVolume }: VolumeControlProps) {
   const [currentVolume, setCurrentVolume] = useState<number>(volume);
   const [previousVolume, setPreviousVolume] = useState<number>(volume);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   
-  // Refs
   const isDraggingRef = useRef(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync with external volume unless dragging
   useEffect(() => {
     if (!isDraggingRef.current) {
-      setCurrentVolume(Math.round(volume)); 
+      setCurrentVolume(volume); 
     }
   }, [volume]);
 
@@ -50,10 +47,10 @@ export default function VolumeControl({ isReady, volume = 50, iconSize = 18, onC
 
   // Update volume on drag
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseInt(e.target.value);
+    const newVolume = parseFloat(e.target.value);
     setCurrentVolume(newVolume);
-    if (onChange) {
-      onChange(newVolume);
+    if (onSetVolume) {
+      onSetVolume(newVolume);
     }
   };
 
@@ -67,15 +64,16 @@ export default function VolumeControl({ isReady, volume = 50, iconSize = 18, onC
   // Mute/unmute and remember last volume
   const toggleMute = () => {
     if (currentVolume === 0) {
-      setCurrentVolume(previousVolume || 50);
-      if (onChange) {
-        onChange(previousVolume || 50);
+      const restoredVolume = previousVolume || 0.5;
+      setCurrentVolume(restoredVolume);
+      if (onSetVolume) {
+        onSetVolume(restoredVolume);
       }
     } else {
       setPreviousVolume(currentVolume);
       setCurrentVolume(0);
-      if (onChange) {
-        onChange(0);
+      if (onSetVolume) {
+        onSetVolume(0);
       }
     }
   };
@@ -83,8 +81,6 @@ export default function VolumeControl({ isReady, volume = 50, iconSize = 18, onC
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
-
-  if(!isReady) return;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -106,7 +102,7 @@ export default function VolumeControl({ isReady, volume = 50, iconSize = 18, onC
           <VolumeIcon currentVolume={currentVolume} iconSize={iconSize}/>
         </button>
 
-        <span>{currentVolume}%</span>
+        <span>{Math.round(currentVolume * 100)}%</span>
       </div>
 
       {/* Dropdown with volume slider */}
@@ -117,7 +113,8 @@ export default function VolumeControl({ isReady, volume = 50, iconSize = 18, onC
             
             <Slider
               min={0}
-              max={100}
+              max={1}
+              step={0.01}
               value={currentVolume}
               onChange={handleSliderChange}
               onMouseDown={handleDragStart}

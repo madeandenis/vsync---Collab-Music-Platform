@@ -1,24 +1,20 @@
 'use client';
 
-import { Track, Group, GroupSession, ScoredTrack } from "@frontend/shared";
-
-// Components
+import { Group } from "@frontend/shared";
+import { useQuery } from "@tanstack/react-query";
+import { fetchGroupSessionAdminStatus } from "apps/frontend/src/app/_api/groupsSessionApi";
 import GroupInfoCard from "apps/frontend/src/app/_components/cards/GroupInfoCard";
+import { EditGroupForm } from "apps/frontend/src/app/_components/forms/EditGroupForm";
 import TrackQueue from "apps/frontend/src/app/_components/lists/TrackQueue";
+import Player from "apps/frontend/src/app/_components/player/Player";
 import { ProfileHeader } from "apps/frontend/src/app/_components/ProfileHeader";
 import TrackSearchContainer from "apps/frontend/src/app/_components/search_bars/TrackSearchContainer";
-import SpotifyPlayer from "apps/frontend/src/app/_components/player/SpotifyPlayer";
 import SessionAdminPanel from "apps/frontend/src/app/_components/SessionAdminPanel";
-
-// Hooks
-import useGroupSocket, { GroupSocketEventHandlers } from "apps/frontend/src/app/_hooks/useGroupSocket";
-import { useSpotifyPlayback } from "apps/frontend/src/app/_hooks/useSpotifyPlayback";
-
-// Context
-import { useQueueManagement } from "apps/frontend/src/app/_hooks/useQueueManagement";
-import { useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAlertContext } from "apps/frontend/src/app/contexts/alertContext";
+import useGroupSession from "apps/frontend/src/app/_hooks/group/useGroupSession";
+import usePlayback from "apps/frontend/src/app/_hooks/usePlayback";
+import usePlaybackSync from "apps/frontend/src/app/_hooks/usePlaybackSync";
+import { useState } from "react";
+import { MdEditNote } from "react-icons/md";
 
 interface GroupSessionContentProps {
   group: Group;
@@ -26,74 +22,61 @@ interface GroupSessionContentProps {
 }
 
 export default function GroupSessionContent({ group, groupId }: GroupSessionContentProps) {
-  const { setAlert } = useAlertContext();
-  const errorDuration = 1500;
 
-  const router = useRouter();
+  const { data: isAdmin } = useQuery({
+    queryKey: ['isAdmin'],
+    queryFn: () => fetchGroupSessionAdminStatus(groupId),
+    enabled: !!groupId,
+  });
 
-  // ** State Management **
-  const [session, setSession] = useState<GroupSession | null>(null);
-  const [queue, setQueue] = useState<ScoredTrack[]>([]);
-  const [nowPlaying, setNowPlaying] = useState<GroupSession['nowPlaying'] | null>(null);
+  const {
+    session, syncSession,
+    queue, syncQueue,
+    nowPlaying,
+    socketActions,
+    addTrackToQueue,
+  } = useGroupSession(groupId);
 
-  // ** Event Handlers **
-  const eventHandlers: GroupSocketEventHandlers = {
-    onQueueUpdate: setQueue,
-    onSessionUpdate: setSession,
-    onNowPlayingUpdate: setNowPlaying,
-    onDisconnect: useCallback(() => {
-      setAlert('Disconnected from session', 'info', errorDuration);
-      router.back();
-    }, [router, setAlert]),
-  
-    onError: useCallback((error: string) => {
-      setAlert(error, 'error', errorDuration);
-    }, [router, setAlert]),
-  };
-
-  // ** Group Socket **
-  const { actions: socketActions } = useGroupSocket(groupId, eventHandlers);
-
-  // ** Spotify Playback **
-  const emitters = {
-    emitPauseTrack: socketActions.playback.pause,
-    emitResumeTrack: socketActions.playback.resume,
-    emitPlayTrack: socketActions.playback.play,
-    emitNextTrack: socketActions.playback.next,
-    emitPreviousTrack: socketActions.playback.previous,
-    emitSeekTrack: socketActions.playback.seek,
-  }
-  const { playerState, playbackControls } = useSpotifyPlayback(queue, setQueue, emitters);
-
-  // ** Queue Management **
-  useQueueManagement(
-    playerState.player,
-    playerState.state,
-    queue, 
-    setQueue,
-    playbackControls.play
+  const playback = usePlayback(
+    queue,
+    syncQueue,
+    nowPlaying,
+    session?.platform,
+    socketActions,
   );
 
-  const handleAddTrack = (track: Track) => {
-    const leadTrackScore = queue[0]?.score ?? 0;
-    socketActions.queue.add(track, queue.length ? leadTrackScore : leadTrackScore + 1);
-  };
+  usePlaybackSync(
+    nowPlaying,
+    playback.states.state,
+    playback.states.player,
+  );
 
-  const handleQueueReorder = useCallback((newQueue: ScoredTrack[]) => {
-    setQueue(newQueue);
-    socketActions.syncQueue(newQueue);
-  }, [socketActions]);
-  
-  const setAndSyncSession = useCallback((newSession: GroupSession) => {
-    setSession(newSession)
-    socketActions.syncSession(newSession);
-  }, [socketActions]);
-  
-  const sessionAdminPanel = session && (
-    <SessionAdminPanel
-      session={session}
-      setSession={setAndSyncSession}
-    />
+  const [openEditForm, setOpenEditForm] = useState(false);
+  const panelsContainer = isAdmin && (
+    <div className="flex flex-col items-center justify-center gap-2">
+      {session && (
+        <SessionAdminPanel
+          session={session}
+          setSession={syncSession}
+        />
+      )}
+
+      <button
+        className="p-1 bg-white/10 rounded-xl cursor-pointer z-49 relative"
+        title="Edit Group"
+        onClick={() => setOpenEditForm(true)}
+      >
+        <MdEditNote className="text-white/70" size={28} />
+      </button>
+
+      {openEditForm && (
+        <EditGroupForm
+          setOpen={setOpenEditForm}
+          group={group}
+          refetchAll={() => window.location.reload()}
+        />
+      )}
+    </div>
   );
 
   return (
@@ -106,23 +89,42 @@ export default function GroupSessionContent({ group, groupId }: GroupSessionCont
         <GroupInfoCard
           group={group}
           session={session}
-          sessionAdminPanel={sessionAdminPanel}
+          panel={panelsContainer}
         />
       </div>
 
       {/* Player */}
       <div className="container mx-auto w-[90%] max-w-xl">
-        <SpotifyPlayer
-          isQueueEmpty={!queue.length}
+        <Player
+          playback={playback}
           nowPlaying={nowPlaying}
-          playerState={playerState}
-          playbackControls={playbackControls}
         />
       </div>
 
+      {/* Remove */}
+      {
+        false &&
+        <div className="container mx-auto w-[90%] max-w-xl text-white/60">
+          <details className="bg-white/5 rounded-xl p-4 w-full">
+            <summary className="cursor-pointer text-lg text-center">
+              Show Spotify State
+              {<br />}
+              {'Player Ready: ' + (playback.states.player ? 'true' : 'false')}
+              {<br />}
+              {'Playback Track: ' + playback.states.state?.track_window?.current_track?.name}
+              {<br />}
+              {'NowPlaying Session Track: ' + nowPlaying?.track.name}
+            </summary>
+            <pre className="whitespace-pre-wrap mt-3 overflow-x-auto max-h-96 text-sm">
+              {JSON.stringify(playback.states.state, null, 2)}
+            </pre>
+          </details>
+        </div>
+      }
+
       {/* Main Content */}
       <div className="container mx-auto w-[90%] max-w-xl rounded-xl bg-white/5 p-2 sm:p-6">
-        <TrackSearchContainer onTrackAdd={handleAddTrack} />
+        <TrackSearchContainer onTrackAdd={addTrackToQueue} />
 
         <div className="mt-8 mb-4 text-center font-montserrat">
           <p className="text-sm text-white/75">
@@ -134,9 +136,9 @@ export default function GroupSessionContent({ group, groupId }: GroupSessionCont
         {session && queue.length > 0 && (
           <TrackQueue
             queue={queue}
-            onQueueReorder={handleQueueReorder}
-            socketActions={socketActions}
-            playbackControls={playbackControls}
+            onQueueReorder={syncQueue}
+            player={playback.states.player}
+            queueEmitters={socketActions['queue']}
             sessionSettings={session.settings}
           />
         )}

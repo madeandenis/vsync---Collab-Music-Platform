@@ -1,33 +1,37 @@
 import { IoMdRepeat } from "react-icons/io";
 
-type RepeatButtonProps = {
-  isReady: boolean;
-  isRepeatOn: boolean;
-  onRepeat?: (isRepeatOn: boolean) => void;
+interface RepeatButtonProps {
+  repeatMode?: 'off' | 'on';
+  setRepeatMode: (repeatMode: 'off' | 'on') => void;
+  iconSize: number; 
 };
 
-const RepeatButton = ({ isReady, isRepeatOn, onRepeat }: RepeatButtonProps) => {
+const RepeatButton = ({
+  repeatMode = 'off',
+  setRepeatMode,
+  iconSize
+}: RepeatButtonProps) => {
+  
   const handleToggleRepeat = () => {
-    if (!isReady || !onRepeat) return;
-    onRepeat(!isRepeatOn); 
+    const nextMode = repeatMode === 'off' ? 'on' : 'off';
+    setRepeatMode(nextMode);
   };
   
   const getButtonStyles = () => {
     let baseClasses = "p-2 rounded-full transition-colors";
-    return isRepeatOn 
+    
+    return repeatMode == 'on' 
       ? `${baseClasses} text-green-500 hover:bg-white/10`
       : `${baseClasses} text-white hover:bg-white/10`;
   };
-
-  if (!isReady) return null;
 
   return (
     <button
       onClick={handleToggleRepeat}
       className={getButtonStyles()}
-      aria-label={isRepeatOn ? "Disable repeat" : "Enable repeat"}
+      aria-label={repeatMode == 'on' ? "Disable repeat" : "Enable repeat"}
     >
-      <IoMdRepeat size={20} />
+      <IoMdRepeat size={iconSize} />
     </button>
   );
 };

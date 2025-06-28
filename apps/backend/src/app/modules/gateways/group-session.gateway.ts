@@ -60,11 +60,11 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
 
             socket.join(groupId);
 
-            this.emitToClient(Events.Group.QUEUE, tracks);
+            this.emitToClient(socket, Events.Group.QUEUE, tracks);
             this.emitToGroup(groupId, Events.Group.SESSION, groupSession);
 
             if (groupSession.nowPlaying) {
-                this.emitToClient(Events.Track.NOW_PLAYING, groupSession.nowPlaying);
+                this.emitToClient(socket, Events.Track.NOW_PLAYING, groupSession.nowPlaying);
             }
 
         } catch (error) {
@@ -545,8 +545,8 @@ export class GroupSessionGateway implements OnGatewayConnection, OnGatewayDiscon
 
     // -- Emitters --
 
-    private emitToClient = (event: string, data: any) => {
-        this.server.emit(event, data);
+    private emitToClient = (socket: AuthSocket, event: string, data: any) => {
+        socket.emit(event, data);
     };
 
     private emitToGroup = (groupId: string, event: string, data: any) => {

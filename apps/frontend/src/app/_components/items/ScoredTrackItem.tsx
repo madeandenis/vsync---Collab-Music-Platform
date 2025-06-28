@@ -8,7 +8,7 @@ import { TrackOptions } from "../options/TrackOptions";
 
 interface ScoredTrackItemProps {
     scoredTrack: ScoredTrack;
-    onPlay: (trackId: string) => void;
+    onPlay?: (trackId: string) => void;
     onDownvote: (track: QueuedTrack) => void;
     onUpvote: (track: QueuedTrack) => void;
     onWithdrawVote: (track: QueuedTrack) => void;

@@ -1,40 +1,39 @@
 import { IoPlayBackSharp } from "react-icons/io5";
 
-type PreviousButtonProps = {
-  isReady: boolean;
-  isLoading: boolean;
-  iconSize?: number;
-  onPrevious?: () => Promise<void>;
-  setIsLoading: (loading: boolean) => void;
+interface PreviousButtonProps {
+  isProcessing: boolean;
+  setIsProcessing: (processing: boolean) => void;
+  onPrevious: () => Promise<void>;
+  iconSize: number;
 };
 
 const PreviousButton = ({
-  isReady,
-  isLoading,
-  iconSize = 22,
+  isProcessing,
+  setIsProcessing,
   onPrevious,
-  setIsLoading,
+  iconSize,
 }: PreviousButtonProps) => {
+
   const handleClick = async () => {
     if (!onPrevious) return;
 
-    setIsLoading(true);
+    setIsProcessing(true);
 
     try {
       await onPrevious();
     } catch (error) {
       console.error("Error skipping to the previous track:", error);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   return (
     <button
-      disabled={!isReady || isLoading}
+      disabled={isProcessing}
       onClick={handleClick}
-      className="p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
-      aria-label={isReady ? "Previous" : "Previous (currently unavailable)"}
+      className="p-2 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+      aria-label={"Previous track"}
     >
       <IoPlayBackSharp size={iconSize} />
     </button>

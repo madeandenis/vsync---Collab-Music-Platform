@@ -1,17 +1,18 @@
 import { useMutation } from '@tanstack/react-query';
 import React, { Dispatch, SetStateAction, useRef, useState } from 'react';
-import { createUserGroup, updateUserGroup, uploadGroupThumbnail } from '../_api/groupsApi';
+import { createUserGroup, updateUserGroup, uploadGroupThumbnail } from '../../_api/groupsApi';
 import { CreateGroupDto, Group, UpdateGroupDto } from '@frontend/shared';
-import { useUserContext } from '../contexts/userContext';
-import { normalize } from '../_utils/sanitizeUtils';
-import { useAlertContext } from '../contexts/alertContext';
-import { useGroupsContext } from '../contexts/groupsContext';
+import { useUserContext } from '../../contexts/userContext';
+import { normalize } from '../../_utils/sanitizeUtils';
+import { useAlertContext } from '../../contexts/alertContext';
+import { useGroupsContext } from '../../contexts/groupsContext';
 
 interface GroupFormState {
     name: string;
     description: string;
     thumbnailSrc: string | null;
     thumbnailError: string | null;
+    isPublic: boolean;
 }
 
 interface GroupFormSetters {
@@ -20,6 +21,7 @@ interface GroupFormSetters {
     setThumbnail: (e: React.ChangeEvent<HTMLInputElement>) => void;
     setThumbnailSrc: (file: File | null) => void | (() => void);
     setThumbnailError: (error: string) => void;
+    setIsPublic: Dispatch<SetStateAction<boolean>>;
     createGroup: () => void;
     updateGroup: () => void;
     deleteGroup: () => void;
@@ -30,7 +32,10 @@ export interface GroupFormContext {
     setters: GroupFormSetters
 }
 
-export default function useGroupForm(group?: Group) {
+export default function useGroupForm(
+    group?: Group,
+    refetchAll?: () => void
+) {
     const [name, setName] = useState<string>(group?.name ?? "");
     const [description, setDescription] = useState<string>(group?.description ?? "");
     const [thumbnailSrc, setThumbnailSrcState] = useState<string | null>(
@@ -38,11 +43,11 @@ export default function useGroupForm(group?: Group) {
     );
     const [thumbnailError, setThumbnailErrorState] = useState<string | null>(null);
     const [thumbnail, setThumbnailState] = useState<File | null>(null);
+    const [isPublic, setIsPublic] = useState<boolean>(group?.isPublic ?? false);
     const timeoutId = useRef<NodeJS.Timeout | null>(null);
 
     const { profile } = useUserContext();
     const { setAlert } = useAlertContext();
-    const { refetchAll } = useGroupsContext();
 
     const setThumbnailSrc = (file: File | null) => {
         if (!file) return setThumbnailSrcState(null);
@@ -117,7 +122,7 @@ export default function useGroupForm(group?: Group) {
                 return;
             }
 
-            refetchAll();
+            refetchAll?.();
         }
     });
 
@@ -133,7 +138,7 @@ export default function useGroupForm(group?: Group) {
                 return;
             }
 
-            refetchAll();
+            refetchAll?.();
         }
     });
 
@@ -141,10 +146,10 @@ export default function useGroupForm(group?: Group) {
         mutationFn: ({ groupId, thumbnail }: { groupId: string; thumbnail: File }) =>
             uploadGroupThumbnail(groupId, thumbnail),
         onSuccess: () => {
-            refetchAll();
+            refetchAll?.();
         },
         onError: () => {
-            refetchAll();
+            refetchAll?.();
         }
     });
 
@@ -159,7 +164,7 @@ export default function useGroupForm(group?: Group) {
             name: dtoName,
             description: dtoDescription,
             imageUrl: '',
-            isPublic: false,
+            isPublic: isPublic,
             platform: profile.platform,
         }
 
@@ -176,7 +181,7 @@ export default function useGroupForm(group?: Group) {
         const groupDto: UpdateGroupDto = {
             name: dtoName,
             description: dtoDescription,
-            isPublic: false,
+            isPublic: isPublic,
         }
 
         updateGroupRequest.mutate({
@@ -192,6 +197,7 @@ export default function useGroupForm(group?: Group) {
         description,
         thumbnailSrc,
         thumbnailError,
+        isPublic,
     }
     const setters: GroupFormSetters = {
         setName,
@@ -199,6 +205,7 @@ export default function useGroupForm(group?: Group) {
         setThumbnail,
         setThumbnailSrc,
         setThumbnailError,
+        setIsPublic,
         createGroup,
         updateGroup,
         deleteGroup,

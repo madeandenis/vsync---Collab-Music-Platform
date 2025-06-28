@@ -2,26 +2,24 @@ import React from "react";
 import { GroupSession, ScoredTrack } from "@frontend/shared";
 import DraggableList from "../lists/DraggableList";
 import ScoredTrackItem from "../items/ScoredTrackItem";
-import { GroupSocketActions } from "../../_hooks/useGroupSocket";
-import { PlaybackControls } from "../../_hooks/useSpotifyPlayback";
+import { GroupSocketActions } from "../../_hooks/group/useGroupSocket";
+import { Playback } from "../../_types/playback";
 
 interface TrackQueueProps {
   queue: ScoredTrack[];
   sessionSettings: GroupSession['settings'];
   onQueueReorder: (reorderedQueue: ScoredTrack[]) => void;
-  playbackControls: PlaybackControls;
-  socketActions: GroupSocketActions; 
+  player: Playback.Controller | null;
+  queueEmitters: GroupSocketActions['queue']; 
 }
 
 const TrackQueue = ({
   queue,
   sessionSettings,
   onQueueReorder,
-  playbackControls,
-  socketActions,
+  player,
+  queueEmitters,
 }: TrackQueueProps) => {
-
-  const { queue: queueActions } = socketActions;
 
   const getTrackId = (scoredTrack: ScoredTrack) => scoredTrack.queuedTrack.trackDetails.id;
 
@@ -29,11 +27,11 @@ const TrackQueue = ({
     <ScoredTrackItem
       key={getTrackId(scoredTrack)}
       scoredTrack={scoredTrack}
-      onPlay={playbackControls.play}
-      onUpvote={queueActions.upvote}
-      onDownvote={queueActions.downvote}
-      onWithdrawVote={queueActions.withdrawVote}
-      removeTrack={queueActions.remove}
+      onPlay={player?.play}
+      onUpvote={queueEmitters.upvote}
+      onDownvote={queueEmitters.downvote}
+      onWithdrawVote={queueEmitters.withdrawVote}
+      removeTrack={queueEmitters.remove}
       isVoteSystemEnabled={sessionSettings.isVoteSystemEnabled}
       isQueueReorderingEnabled={sessionSettings.isQueueReorderingEnabled}
     />

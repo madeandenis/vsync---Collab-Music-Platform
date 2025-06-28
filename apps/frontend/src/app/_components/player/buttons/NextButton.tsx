@@ -1,41 +1,39 @@
 import { IoPlayForwardSharp } from "react-icons/io5";
 
-type NextButtonProps = {
-  isReady: boolean;
-  isLoading: boolean;
-  iconSize?: number;
+interface NextButtonProps {
+  isProcessing: boolean;
+  setIsProcessing: (processing: boolean) => void;
   onNext?: () => Promise<void>;
-  setIsLoading: (loading: boolean) => void;
+  iconSize: number;
 };
 
 const NextButton = ({
-  isReady,
-  isLoading,
-  iconSize = 22,
+  isProcessing,
+  setIsProcessing,
   onNext,
-  setIsLoading,
+  iconSize,
 }: NextButtonProps) => {
 
   const handleClick = async () => {
     if (!onNext) return;
 
-    setIsLoading(true);
+    setIsProcessing(true);
 
     try {
       await onNext();
     } catch (error) {
       console.error("Error skipping to the next track:", error);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
   return (
     <button
-      disabled={!isReady || isLoading}
+      disabled={isProcessing}
       onClick={handleClick}
-      className="p-2 disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
-      aria-label={isReady ? "Next" : "Next (currently unavailable)"}
+      className="p-2 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+      aria-label={"Next track"}
     >
       <IoPlayForwardSharp size={iconSize} />
     </button>
