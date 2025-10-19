@@ -1,82 +1,189 @@
-# frontend
+# vsync---Collab-Music-Platform
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+## 🚀 Overview
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+vsync---Collab-Music-Platform is a collaborative music platform that allows users to create and manage music groups, share playlists, and vote on tracks. The platform supports multiple music platforms and offers features like collaborative queue management, real-time playback, and user authentication.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+### Key Features
 
-## Finish your remote caching setup
+- **Collaborative Playlists**: Create and manage shared playlists with friends.
+- **Real-Time Playback**: Listen to music together in real-time.
+- **Voting System**: Upvote or downvote tracks to influence the queue.
+- **User Authentication**: Securely log in with your favorite music platform accounts.
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/EO8wWujEAV)
+### Who This Project Is For
 
+- Music enthusiasts who want to listen to music together with friends.
+- Developers interested in building collaborative applications.
+- Anyone who loves music and wants to enhance their listening experience.
 
-## Run tasks
+## ✨ Features
 
-To run the dev server for your app, use:
+- 🎵 **Collaborative Playlists**: Create and manage shared playlists with friends.
+- 🎧 **Real-Time Playback**: Listen to music together in real-time.
+- 🗳️ **Voting System**: Upvote or downvote tracks to influence the queue.
+- 🔒 **User Authentication**: Securely log in with your favorite music platform accounts.
+- 🌐 **Multiple Platform Support**: Supports Spotify, YouTube Music, and more.
 
-```sh
-npx nx dev frontend
+## 🛠️ Tech Stack
+
+- **Programming Language**: Unknown
+- **Frameworks, Libraries, and Tools**:
+  - NestJS
+  - React
+  - Next.js
+  - Prisma
+  - Redis
+  - Socket.IO
+  - Tailwind CSS
+- **System Requirements**: Node.js, npm, and a modern web browser.
+
+## 📦 Installation
+
+### Prerequisites
+
+- Node.js (v14 or later)
+- npm (v6 or later)
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/madeandenis/vsync---Collab-Music-Platform.git
+
+# Navigate to the project directory
+cd vsync---Collab-Music-Platform
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
 ```
 
-To create a production bundle:
+### Advanced Usage
 
-```sh
-npx nx build frontend
+- **Configuration**: Customize the application by modifying the configuration files.
+- **API Documentation**: Refer to the API documentation for more details on available endpoints.
+
+## 📁 Project Structure
+
+```
+vsync---Collab-Music-Platform/
+├── apps/
+│   ├── backend/
+│   │   ├── src/
+│   │   │   ├── main.ts
+│   │   │   ├── app/
+│   │   │   │   ├── modules/
+│   │   │   │   │   ├── app/
+│   │   │   │   │   │   ├── app.module.ts
+│   │   │   │   │   │   └── ...
+│   │   │   │   │   └── ...
+│   │   │   │   ├── common/
+│   │   │   │   │   ├── filters/
+│   │   │   │   │   │   ├── exception.filter.ts
+│   │   │   │   │   │   └── ...
+│   │   │   │   │   └── ...
+│   │   │   │   └── ...
+│   │   │   └── ...
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── ...
+│   ├── frontend/
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── global.css
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── pages/
+│   │   │   │   │   ├── index.tsx
+│   │   │   │   │   └── ...
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── Button.tsx
+│   │   │   │   │   └── ...
+│   │   │   │   └── ...
+│   │   │   ├── tailwind.config.js
+│   │   │   ├── tsconfig.json
+│   │   │   ├── tsconfig.spec.json
+│   │   │   └── ...
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.js
+│   │   ├── postcss.config.js
+│   │   └── ...
+│   │   └── ...
+│   └── ...
+├── shared/
+│   ├── src/
+│   │   ├── lib/
+│   │   │   ├── common/
+│   │   │   │   ├── api-response.types.ts
+│   │   │   │   ├── events.ts
+│   │   │   │   └── ...
+│   │   │   ├── group/
+│   │   │   │   ├── group-session.payloads.ts
+│   │   │   │   ├── group-session.types.ts
+│   │   │   │   └── ...
+│   │   │   ├── music/
+│   │   │   │   ├── music-service.types.ts
+│   │   │   │   ├── queue.types.ts
+│   │   │   │   └── ...
+│   │   │   ├── user/
+│   │   │   │   ├── user-session.types.ts
+│   │   │   │   └── ...
+│   │   │   └── ...
+│   │   └── ...
+│   ├── tsconfig.json
+│   ├── tsconfig.lib.json
+│   └── ...
+├── .editorconfig
+├── .gitignore
+├── jest.config.ts
+├── jest.preset.js
+├── nx.json
+├── package.json
+├── package-lock.json
+├── tsconfig.base.json
+└── README.md
 ```
 
-To see all available targets to run for a project, run:
+## 🔧 Configuration
 
-```sh
-npx nx show project frontend
-```
+- **Environment Variables**: Set environment variables in a `.env` file.
+- **Configuration Files**: Modify the configuration files as needed.
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+## 🤝 Contributing
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- **How to Contribute**: Fork the repository and submit a pull request.
+- **Development Setup**: Clone the repository and install dependencies.
+  ```bash
+  git clone https://github.com/madeandenis/vsync---Collab-Music-Platform.git
+  cd vsync---Collab-Music-Platform
+  npm install
+  ```
+- **Code Style Guidelines**: Follow the existing code style guidelines.
+- **Pull Request Process**: Submit a pull request with a clear description of the changes.
 
-## Add new projects
+## 📝 License
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Use the plugin's generator to create new projects.
+## 👥 Authors & Contributors
 
-To generate a new application, use:
+- **Maintainers**: Mădean Denis
 
-```sh
-npx nx g @nx/next:app demo
-```
+## 🐛 Issues & Support
 
-To generate a new library, use:
+- **Report Issues**: Submit issues on the GitHub repository.
 
-```sh
-npx nx g @nx/react:lib mylib
-```
+---
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+**Additional Guidelines:**
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Use modern markdown features (badges, collapsible sections, etc.)
+- Include practical, working code examples
+- Make it visually appealing with appropriate emojis
+- Ensure all code snippets are syntactically correct for Unknown
+- Include relevant badges (build status, version, license, etc.)
+- Make installation instructions copy-pasteable
+- Focus on clarity and developer experience
